@@ -1,0 +1,169 @@
+package com.btech_dev.quotebro
+
+import android.os.Bundle
+import androidx.activity.ComponentActivity
+import androidx.activity.SystemBarStyle
+import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavDestination.Companion.hasRoute
+import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.rememberNavController
+import com.btech_dev.quotebro.data.remote.SupabaseClient
+import com.btech_dev.quotebro.ui.home.TopBar
+import com.btech_dev.quotebro.ui.login.AuthScreen
+import com.btech_dev.quotebro.ui.login.AuthViewModel
+import com.btech_dev.quotebro.ui.navigation.AppNavGraph
+import com.btech_dev.quotebro.ui.navigation.Screen
+import com.btech_dev.quotebro.ui.theme.PrimaryColor
+import com.btech_dev.quotebro.ui.theme.QuoteBroTheme
+import com.btech_dev.quotebro.ui.theme.TextGray
+
+class MainActivity : ComponentActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+
+        // Initialize Supabase client with app context for session persistence
+        SupabaseClient.initialize(this)
+
+        enableEdgeToEdge(statusBarStyle = SystemBarStyle.light(Color.Transparent.toArgb(), Color.Transparent.toArgb()))
+        setContent {
+
+            QuoteBroTheme {
+                MainScreen()
+            }
+        }
+    }
+}
+
+data class BottomNavItem(
+    val route: Screen,
+    val icon: ImageVector,
+    val label: String
+)
+
+@Composable
+fun MainScreen(
+    authViewModel: AuthViewModel = viewModel()
+) {
+    val authState by authViewModel.uiState.collectAsState()
+    val navController = rememberNavController()
+
+    val bottomNavItems = listOf(
+        BottomNavItem(Screen.Home, Icons.Default.Home, "Home"),
+        BottomNavItem(Screen.Favorites, Icons.Default.Favorite, "Saved"),
+        BottomNavItem(Screen.Settings, Icons.Default.Person, "Me")
+    )
+
+    Box(modifier = Modifier.fillMaxSize()) {
+        if (authState.isCheckingAuth) {
+            CircularProgressIndicator(
+                modifier = Modifier.align(Alignment.Center)
+            )
+        } else if (authState.isAuthenticated) {
+            val navBackStackEntry by navController.currentBackStackEntryAsState()
+            val currentDestination = navBackStackEntry?.destination
+
+            // Check if we're on a main screen (show bottom bar) or a detail screen (hide bottom bar)
+            val showBottomBar = bottomNavItems.any { currentDestination?.hasRoute(it.route::class) == true }
+            // Show top bar only on Home screen
+            val showTopBar = currentDestination?.hasRoute(Screen.Home::class) == true
+
+            Box(modifier = Modifier.fillMaxSize()) {
+                // Main content
+                AppNavGraph(
+                    navController = navController,
+                    startDestination = Screen.Home,
+                    onLogOut = { authViewModel.signOut() },
+                    modifier = Modifier.fillMaxSize()
+                )
+                
+                // Animated Top Bar - only on Home screen
+                AnimatedVisibility(
+                    visible = showTopBar,
+                    enter = slideInVertically(
+                        initialOffsetY = { -it },
+                        animationSpec = tween(300)
+                    ),
+                    exit = slideOutVertically(
+                        targetOffsetY = { -it },
+                        animationSpec = tween(300)
+                    ),
+                    modifier = Modifier.align(Alignment.TopCenter)
+                ) {
+                    TopBar()
+                }
+                
+                // Animated Bottom Bar
+                AnimatedVisibility(
+                    visible = showBottomBar,
+                    enter = slideInVertically(
+                        initialOffsetY = { it },
+                        animationSpec = tween(300)
+                    ),
+                    exit = slideOutVertically(
+                        targetOffsetY = { it },
+                        animationSpec = tween(300)
+                    ),
+                    modifier = Modifier.align(Alignment.BottomCenter)
+                ) {
+                    NavigationBar(
+                        modifier = Modifier.navigationBarsPadding(),
+                        containerColor = Color.White,
+                        tonalElevation = 8.dp
+                    ) {
+                        bottomNavItems.forEach { item ->
+                            val selected = currentDestination?.hasRoute(item.route::class) == true
+                            NavigationBarItem(
+                                icon = { Icon(item.icon, contentDescription = null) },
+                                label = { Text(item.label) },
+                                selected = selected,
+                                onClick = {
+                                    navController.navigate(item.route) {
+                                        popUpTo(navController.graph.findStartDestination().id) {
+                                            saveState = true
+                                        }
+                                        launchSingleTop = true
+                                        restoreState = true
+                                    }
+                                },
+                                colors = NavigationBarItemDefaults.colors(
+                                    selectedIconColor = PrimaryColor,
+                                    selectedTextColor = PrimaryColor,
+                                    indicatorColor = PrimaryColor.copy(alpha = 0.1f),
+                                    unselectedIconColor = TextGray,
+                                    unselectedTextColor = TextGray
+                                )
+                            )
+                        }
+                    }
+                }
+            }
+        } else {
+            AuthScreen(
+                viewModel = authViewModel,
+                onAuthSuccess = { /* State update will trigger recomposition */ }
+            )
+        }
+    }
+}
