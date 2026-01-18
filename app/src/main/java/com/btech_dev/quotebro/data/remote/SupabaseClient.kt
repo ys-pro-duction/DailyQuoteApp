@@ -1,14 +1,14 @@
 package com.btech_dev.quotebro.data.remote
 
 import android.content.Context
-import io.github.jan.supabase.SupabaseClient as SupabaseKtClient
-import io.github.jan.supabase.createSupabaseClient
 import io.github.jan.supabase.auth.Auth
+import io.github.jan.supabase.createSupabaseClient
 import io.github.jan.supabase.postgrest.Postgrest
 import io.github.jan.supabase.realtime.Realtime
 import io.github.jan.supabase.storage.Storage
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import io.github.jan.supabase.SupabaseClient as SupabaseKtClient
 
 object SupabaseClient {
     private const val SUPABASE_URL = "https://wpuooqjxztilnkoprili.supabase.co"
@@ -24,7 +24,8 @@ object SupabaseClient {
             ) {
                 install(Auth) {
                     sessionManager = object : io.github.jan.supabase.auth.SessionManager {
-                        private val prefs = context.getSharedPreferences("supabase_session", Context.MODE_PRIVATE)
+                        private val prefs =
+                            context.getSharedPreferences("supabase_session", Context.MODE_PRIVATE)
 
                         override suspend fun saveSession(session: io.github.jan.supabase.auth.user.UserSession) {
                             prefs.edit().putString("session", Json.encodeToString(session)).apply()
@@ -34,7 +35,9 @@ object SupabaseClient {
                             val sessionStr = prefs.getString("session", null) ?: return null
                             return try {
                                 Json.decodeFromString(sessionStr)
-                            } catch(e: Exception) { null }
+                            } catch (e: Exception) {
+                                null
+                            }
                         }
 
                         override suspend fun deleteSession() {
@@ -50,5 +53,6 @@ object SupabaseClient {
     }
 
     val client: SupabaseKtClient
-        get() = _client ?: throw IllegalStateException("SupabaseClient.initialize(context) must be called first")
+        get() = _client
+            ?: throw IllegalStateException("SupabaseClient.initialize(context) must be called first")
 }

@@ -34,8 +34,10 @@ object NotificationHelper {
                 .setSmallIcon(R.mipmap.ic_launcher)
                 .setContentTitle("Daily Inspiration")
                 .setContentText(quote.content)
-                .setStyle(NotificationCompat.BigTextStyle()
-                    .bigText("${quote.content}\n- ${quote.author}"))
+                .setStyle(
+                    NotificationCompat.BigTextStyle()
+                        .bigText("${quote.content}\n- ${quote.author}")
+                )
                 .setPriority(NotificationCompat.PRIORITY_DEFAULT)
                 .setAutoCancel(true)
 

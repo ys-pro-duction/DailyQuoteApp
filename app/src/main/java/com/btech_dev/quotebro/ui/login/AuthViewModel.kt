@@ -38,11 +38,11 @@ class AuthViewModel(
                 val restored = repository.loadSessionFromStorage()
                 // Also check if already logged in (memory)
                 val isLoggedIn = restored || repository.isUserLoggedIn()
-                
+
                 if (isLoggedIn) {
                     fetchUserProfile()
                 }
-                
+
                 _uiState.update {
                     it.copy(isCheckingAuth = false, isAuthenticated = isLoggedIn)
                 }
@@ -62,9 +62,9 @@ class AuthViewModel(
                 fetchUserProfile()
                 _uiState.update { it.copy(isLoading = false, isAuthenticated = true) }
             } catch (e: Exception) {
-                if (e is RestException){
+                if (e is RestException) {
                     _uiState.update { it.copy(isLoading = false, error = e.description) }
-                }else _uiState.update { it.copy(isLoading = false, error = e.message) }
+                } else _uiState.update { it.copy(isLoading = false, error = e.message) }
             }
         }
     }
@@ -80,7 +80,12 @@ class AuthViewModel(
                 if (repository.isUserLoggedIn()) {
                     _uiState.update { it.copy(isLoading = false, isAuthenticated = true) }
                 } else {
-                     _uiState.update { it.copy(isLoading = false, error = "Please check your email to confirm registration") }
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            error = "Please check your email to confirm registration"
+                        )
+                    }
                 }
             } catch (e: Exception) {
                 _uiState.update { it.copy(isLoading = false, error = e.message) }

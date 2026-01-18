@@ -3,7 +3,6 @@ package com.btech_dev.quotebro.receiver
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import android.util.Log
 import com.btech_dev.quotebro.data.repository.QuoteRepository
 import com.btech_dev.quotebro.util.NotificationHelper
 import kotlinx.coroutines.CoroutineScope

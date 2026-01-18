@@ -7,7 +7,6 @@ import io.github.jan.supabase.auth.providers.builtin.Email
 import io.github.jan.supabase.postgrest.postgrest
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 
@@ -16,14 +15,15 @@ class AuthRepository {
     private val auth = SupabaseClient.client.auth
     private val postgrest = SupabaseClient.client.postgrest
 
-    suspend fun signUp(email: String, password: String, fullName: String) = withContext(Dispatchers.IO) {
-        auth.signUpWith(Email) {
-            this.email = email
-            this.password = password
-            data = buildJsonObject { put("full_name", fullName) }
+    suspend fun signUp(email: String, password: String, fullName: String) =
+        withContext(Dispatchers.IO) {
+            auth.signUpWith(Email) {
+                this.email = email
+                this.password = password
+                data = buildJsonObject { put("full_name", fullName) }
 
+            }
         }
-    }
 
     suspend fun signIn(email: String, password: String) = withContext(Dispatchers.IO) {
         auth.signInWith(Email) {

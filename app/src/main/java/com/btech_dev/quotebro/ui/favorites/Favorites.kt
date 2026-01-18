@@ -1,7 +1,5 @@
 package com.btech_dev.quotebro.ui.favorites
 
-import com.btech_dev.quotebro.ui.home.CollectionsBottomSheet
-
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
@@ -35,9 +33,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
-import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -76,6 +74,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.btech_dev.quotebro.data.model.Quote
+import com.btech_dev.quotebro.ui.home.CollectionsBottomSheet
 import com.btech_dev.quotebro.ui.theme.ErrorRed
 import com.btech_dev.quotebro.ui.theme.PrimaryColor
 import com.btech_dev.quotebro.ui.theme.QuoteBroTheme
@@ -95,7 +94,7 @@ fun FavoritesScreen(
     val pagerState = rememberPagerState(pageCount = { 2 })
     val scope = rememberCoroutineScope()
     val uiState by viewModel.uiState.collectAsState()
-    
+
     var showCollectionsSheet by remember { mutableStateOf(false) }
     var selectedQuoteForCollection by remember { mutableStateOf<Quote?>(null) }
     val sheetState = rememberModalBottomSheetState()
@@ -137,7 +136,10 @@ fun FavoritesScreen(
                         }
                     } else if (uiState.favoriteQuotes.isEmpty()) {
                         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                            Text("No favorites yet", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
+                            Text(
+                                "No favorites yet",
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                            )
                         }
                     } else {
                         LazyVerticalStaggeredGrid(
@@ -153,10 +155,12 @@ fun FavoritesScreen(
                                     isLiked = true,
                                     onFavoriteClick = { viewModel.toggleFavorite(quote) },
                                     onShareQuote = { onShareQuote(quote.content, quote.author) },
-                                    onAddToCollection = { 
+                                    onAddToCollection = {
                                         selectedQuoteForCollection = quote
-                                        if (quote.id != null) viewModel.fetchCollectionsForQuote(quote.id)
-                                        showCollectionsSheet = true 
+                                        if (quote.id != null) viewModel.fetchCollectionsForQuote(
+                                            quote.id
+                                        )
+                                        showCollectionsSheet = true
                                     }
                                 )
                             }
@@ -248,13 +252,13 @@ fun FavoritesScreen(
                 }
             )
         }
-        
+
         if (showCollectionsSheet) {
             ModalBottomSheet(
                 onDismissRequest = {
-                    scope.launch { 
+                    scope.launch {
                         sheetState.hide()
-                        showCollectionsSheet = false 
+                        showCollectionsSheet = false
                     }
                 },
                 sheetState = sheetState,
@@ -265,22 +269,22 @@ fun FavoritesScreen(
                     collections = uiState.collections,
                     activeQuoteCollectionIds = uiState.activeQuoteCollectionIds,
                     onCollectionSelected = { collection ->
-                         selectedQuoteForCollection?.id?.let { quoteId ->
+                        selectedQuoteForCollection?.id?.let { quoteId ->
                             collection.id?.let { collectionId ->
                                 viewModel.toggleQuoteInCollection(quoteId, collectionId)
                             }
                         }
                     },
                     onDismiss = {
-                        scope.launch { 
+                        scope.launch {
                             sheetState.hide()
-                            showCollectionsSheet = false 
+                            showCollectionsSheet = false
                         }
                     }
                 )
             }
         }
-        
+
     }
 }
 
@@ -335,7 +339,7 @@ fun SegmentedControl(
                 }
             }
         }
-        
+
     }
 }
 
@@ -416,7 +420,7 @@ fun FavoriteQuoteCard(
                 }
             }
         }
-        
+
     }
 }
 
@@ -478,7 +482,7 @@ fun CollectionCard(
                 }
             }
         }
-        
+
     }
 }
 
@@ -492,7 +496,7 @@ fun CollectionDetailsScreen(
     viewModel: FavoritesViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
-    
+
     var showCollectionsSheet by remember { mutableStateOf(false) }
     var selectedQuoteForCollection by remember { mutableStateOf<Quote?>(null) }
     val sheetState = rememberModalBottomSheetState()
@@ -581,21 +585,26 @@ fun CollectionDetailsScreen(
                         isLiked = isLiked,
                         onFavoriteClick = { viewModel.toggleFavorite(quote) },
                         onShareQuote = { onShareQuote(quote.content, quote.author) },
-                        onAddToCollection = { 
+                        onAddToCollection = {
                             selectedQuoteForCollection = quote
                             if (quote.id != null) viewModel.fetchCollectionsForQuote(quote.id)
-                            showCollectionsSheet = true 
+                            showCollectionsSheet = true
                         }
                     )
                 }
             }
         }
-        
+
         if (showDeleteDialog) {
             AlertDialog(
                 onDismissRequest = { showDeleteDialog = false },
                 title = { Text("Delete Collection?") },
-                text = { Text("Are you sure you want to delete this collection? This cannot be undone.", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)) },
+                text = {
+                    Text(
+                        "Are you sure you want to delete this collection? This cannot be undone.",
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                    )
+                },
                 confirmButton = {
                     TextButton(
                         onClick = {
@@ -610,7 +619,10 @@ fun CollectionDetailsScreen(
                 },
                 dismissButton = {
                     TextButton(onClick = { showDeleteDialog = false }) {
-                        Text("Cancel", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
+                        Text(
+                            "Cancel",
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                        )
                     }
                 },
                 containerColor = MaterialTheme.colorScheme.surface,
@@ -622,9 +634,9 @@ fun CollectionDetailsScreen(
         if (showCollectionsSheet) {
             ModalBottomSheet(
                 onDismissRequest = {
-                    scope.launch { 
+                    scope.launch {
                         sheetState.hide()
-                        showCollectionsSheet = false 
+                        showCollectionsSheet = false
                     }
                 },
                 sheetState = sheetState,
@@ -635,16 +647,16 @@ fun CollectionDetailsScreen(
                     collections = uiState.collections,
                     activeQuoteCollectionIds = uiState.activeQuoteCollectionIds,
                     onCollectionSelected = { collection ->
-                         selectedQuoteForCollection?.id?.let { quoteId ->
+                        selectedQuoteForCollection?.id?.let { quoteId ->
                             collection.id?.let { collectionId ->
                                 viewModel.toggleQuoteInCollection(quoteId, collectionId)
                             }
                         }
                     },
                     onDismiss = {
-                         scope.launch { 
+                        scope.launch {
                             sheetState.hide()
-                            showCollectionsSheet = false 
+                            showCollectionsSheet = false
                         }
                     }
                 )

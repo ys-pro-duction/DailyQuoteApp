@@ -47,7 +47,8 @@ fun AppNavGraph(
             SettingsScreen(
                 onBackClick = { navController.popBackStack() },
                 onLogOutClick = onLogOut,
-                settingsViewModel = settingsViewModel ?: androidx.lifecycle.viewmodel.compose.viewModel()
+                settingsViewModel = settingsViewModel
+                    ?: androidx.lifecycle.viewmodel.compose.viewModel()
             )
         }
 

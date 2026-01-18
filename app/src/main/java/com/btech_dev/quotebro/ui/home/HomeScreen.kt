@@ -26,7 +26,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
-import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -60,19 +59,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.btech_dev.quotebro.data.model.Quote
-import com.btech_dev.quotebro.ui.theme.BackgroundWhite
-import com.btech_dev.quotebro.ui.theme.Black
-import com.btech_dev.quotebro.ui.theme.DarkGray
 import com.btech_dev.quotebro.ui.theme.ErrorRed
-import com.btech_dev.quotebro.ui.theme.LightGray
 import com.btech_dev.quotebro.ui.theme.PrimaryColor
 import com.btech_dev.quotebro.ui.theme.QuoteBroTheme
 import com.btech_dev.quotebro.ui.theme.SecondaryColor
-import com.btech_dev.quotebro.ui.theme.SurfaceLightGray
-import com.btech_dev.quotebro.ui.theme.SurfaceWhite
-import com.btech_dev.quotebro.ui.theme.TextBlack
-import com.btech_dev.quotebro.ui.theme.TextDarkSlate
-import com.btech_dev.quotebro.ui.theme.TextGray
 import com.btech_dev.quotebro.ui.theme.White
 import com.btech_dev.quotebro.ui.theme.icons.Bookmark
 import kotlinx.coroutines.launch
@@ -110,7 +100,9 @@ fun MainHomeContent(
     val sheetState = rememberModalBottomSheetState()
     val coroutineScope = rememberCoroutineScope()
 
-    Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.surface)) {
+    Box(modifier = Modifier
+        .fillMaxSize()
+        .background(MaterialTheme.colorScheme.surface)) {
         if (uiState.isLoading) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
@@ -142,7 +134,7 @@ fun MainHomeContent(
                         quote = qod,
                         isLiked = qod != null && uiState.likedQuoteIds.contains(qod.id),
                         onFavoriteClick = { if (qod != null) viewModel.toggleFavorite(qod) },
-                        onShareQuote = {onShareQuote(qod!!.content, qod.author)}
+                        onShareQuote = { onShareQuote(qod!!.content, qod.author) }
                     )
                 }
                 item {
@@ -221,9 +213,9 @@ fun TopBar() {
         modifier = Modifier
             .fillMaxWidth()
             .background(MaterialTheme.colorScheme.surface)
-            .shadow(0.4.dp).statusBarsPadding()
-            .padding(horizontal = 16.dp, vertical = 12.dp)
-            ,
+            .shadow(0.4.dp)
+            .statusBarsPadding()
+            .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
@@ -253,7 +245,12 @@ fun TopBar() {
 }
 
 @Composable
-fun QuoteOfTheDay(quote: Quote?, isLiked: Boolean = false, onFavoriteClick: () -> Unit = {}, onShareQuote: () -> Unit = {}) {
+fun QuoteOfTheDay(
+    quote: Quote?,
+    isLiked: Boolean = false,
+    onFavoriteClick: () -> Unit = {},
+    onShareQuote: () -> Unit = {}
+) {
     if (quote == null) return
 
     Box(
@@ -266,7 +263,7 @@ fun QuoteOfTheDay(quote: Quote?, isLiked: Boolean = false, onFavoriteClick: () -
                     colors = listOf(SecondaryColor, PrimaryColor)
                 )
             )
-            .clickable(){onShareQuote()}
+            .clickable { onShareQuote() }
             .padding(24.dp)
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
@@ -368,7 +365,8 @@ fun QuoteCard(
 ) {
     // Check if theme is dark by checking background brightness
     val backgroundColor = MaterialTheme.colorScheme.surface
-    val isDarkTheme = (backgroundColor.red + backgroundColor.green + backgroundColor.blue) / 3f < 0.5f
+    val isDarkTheme =
+        (backgroundColor.red + backgroundColor.green + backgroundColor.blue) / 3f < 0.5f
     val backgroundGradient = remember(quote.id, isDarkTheme) {
         val index = (quote.id?.hashCode() ?: 0).absoluteValue % LightGradients.size
         val gradients = if (isDarkTheme) DarkGradients else LightGradients
@@ -403,17 +401,17 @@ fun QuoteCard(
                     verticalArrangement = Arrangement.SpaceBetween
                 ) {
                     Surface(
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = if (isDarkTheme) 0.15f else 0.05f),
-                shape = RoundedCornerShape(50)
-            ) {
-                Text(
-                    text = quote.category,
-                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
-                    style = MaterialTheme.typography.labelMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-            }
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = if (isDarkTheme) 0.15f else 0.05f),
+                        shape = RoundedCornerShape(50)
+                    ) {
+                        Text(
+                            text = quote.category,
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
 
                     Column {
                         Text(

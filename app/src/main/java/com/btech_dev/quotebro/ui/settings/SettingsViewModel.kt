@@ -11,7 +11,8 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 data class SettingsUiState(
-    val isDarkMode: Boolean = false
+    val isDarkMode: Boolean = false,
+    val fontSize: Float = 1.0f // 1.0f = normal, 1.2f = medium, 1.4f = large
 )
 
 class SettingsViewModel(application: Application) : AndroidViewModel(application) {
@@ -25,16 +26,24 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
     }
 
     private fun loadSettings() {
-        // Default to false or maybe system default? 
+        // Default to false or maybe system default?
         // For now false (Light) as per current hardcoded implementation.
         val isDarkMode = prefs.getBoolean("dark_mode", false)
-        _uiState.update { it.copy(isDarkMode = isDarkMode) }
+        val fontSize = prefs.getFloat("font_size", 1.0f)
+        _uiState.update { it.copy(isDarkMode = isDarkMode, fontSize = fontSize) }
     }
 
     fun toggleDarkMode(enabled: Boolean) {
         viewModelScope.launch {
             prefs.edit().putBoolean("dark_mode", enabled).apply()
             _uiState.update { it.copy(isDarkMode = enabled) }
+        }
+    }
+
+    fun updateFontSize(fontSize: Float) {
+        viewModelScope.launch {
+            prefs.edit().putFloat("font_size", fontSize).apply()
+            _uiState.update { it.copy(fontSize = fontSize) }
         }
     }
 }

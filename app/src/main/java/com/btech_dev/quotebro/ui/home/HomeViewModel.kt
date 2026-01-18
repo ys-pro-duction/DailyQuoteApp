@@ -1,17 +1,16 @@
 package com.btech_dev.quotebro.ui.home
 
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import android.content.Context
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.btech_dev.quotebro.data.model.Quote
 import com.btech_dev.quotebro.data.model.Collection
+import com.btech_dev.quotebro.data.model.Quote
 import com.btech_dev.quotebro.data.repository.QuoteRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
-import android.app.Application
-import android.content.Context
-import androidx.lifecycle.AndroidViewModel
 import kotlinx.coroutines.launch
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -48,10 +47,13 @@ class HomeViewModel(
 
     private fun checkQuoteOfTheDay() {
         viewModelScope.launch {
-            val prefs = getApplication<Application>().getSharedPreferences("daily_quote", Context.MODE_PRIVATE)
+            val prefs = getApplication<Application>().getSharedPreferences(
+                "daily_quote",
+                Context.MODE_PRIVATE
+            )
             val today = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
             val savedDate = prefs.getString("date", "")
-            
+
             if (savedDate == today) {
                 val json = prefs.getString("quote_json", null)
                 if (json != null) {
@@ -64,7 +66,7 @@ class HomeViewModel(
                     }
                 }
             }
-            
+
             // Fetch new if needed
             try {
                 val newQuote = repository.getRandomQuote()
@@ -77,7 +79,7 @@ class HomeViewModel(
                     _uiState.update { it.copy(quoteOfTheDay = newQuote) }
                 }
             } catch (e: Exception) {
-                 // Ignore
+                // Ignore
             }
         }
     }
@@ -107,7 +109,7 @@ class HomeViewModel(
     fun toggleFavorite(quote: Quote) {
         viewModelScope.launch {
             val quoteId = quote.id ?: return@launch
-            
+
             // Optimistic update
             _uiState.update { state ->
                 val currentIds = state.likedQuoteIds.toMutableSet()
@@ -146,7 +148,7 @@ class HomeViewModel(
             }
         }
     }
-    
+
     fun fetchCollections() {
         viewModelScope.launch {
             try {
@@ -157,18 +159,18 @@ class HomeViewModel(
             }
         }
     }
-    
+
     fun toggleQuoteInCollection(quoteId: Long, collectionId: Long) {
         viewModelScope.launch {
             val isPresent = _uiState.value.activeQuoteCollectionIds.contains(collectionId)
-            
+
             // Optimistic update
-            _uiState.update { 
+            _uiState.update {
                 val current = it.activeQuoteCollectionIds.toMutableSet()
                 if (isPresent) current.remove(collectionId) else current.add(collectionId)
-                 it.copy(activeQuoteCollectionIds = current)
+                it.copy(activeQuoteCollectionIds = current)
             }
-            
+
             try {
                 if (isPresent) {
                     repository.removeQuoteFromCollection(collectionId, quoteId)
@@ -176,12 +178,12 @@ class HomeViewModel(
                     repository.addQuoteToCollection(collectionId, quoteId)
                 }
             } catch (e: Exception) {
-               // Revert
-               _uiState.update { 
-                   val current = it.activeQuoteCollectionIds.toMutableSet()
+                // Revert
+                _uiState.update {
+                    val current = it.activeQuoteCollectionIds.toMutableSet()
                     if (isPresent) current.add(collectionId) else current.remove(collectionId)
                     it.copy(activeQuoteCollectionIds = current, error = e.message)
-               }
+                }
             }
         }
     }

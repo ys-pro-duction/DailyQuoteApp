@@ -2,26 +2,60 @@ package com.btech_dev.quotebro.ui.share
 
 import android.graphics.Bitmap
 import android.graphics.Canvas
-import android.os.Build
-import android.view.View
 import android.widget.FrameLayout
 import android.widget.Toast
-import androidx.compose.foundation.*
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.dropShadow
-import androidx.compose.ui.graphics.*
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.shadow.Shadow
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.ComposeView
@@ -32,6 +66,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.core.graphics.createBitmap
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.btech_dev.quotebro.ui.theme.AccentBlue
@@ -41,15 +76,13 @@ import com.btech_dev.quotebro.ui.theme.GradientPurple
 import com.btech_dev.quotebro.ui.theme.MoodyDark
 import com.btech_dev.quotebro.ui.theme.QuoteBroTheme
 import com.btech_dev.quotebro.ui.theme.Transparent
-import com.btech_dev.quotebro.ui.theme.icons.Quote as QuoteIcon
-import kotlinx.coroutines.launch
-import androidx.core.graphics.createBitmap
-import com.btech_dev.quotebro.ui.theme.SurfaceLightGray
 import com.btech_dev.quotebro.ui.theme.icons.Copy
 import com.btech_dev.quotebro.ui.theme.icons.Download
 import com.btech_dev.quotebro.ui.theme.icons.Instagram
 import com.btech_dev.quotebro.ui.theme.icons.Share
 import com.btech_dev.quotebro.ui.theme.icons.Whatsapp
+import kotlinx.coroutines.launch
+import com.btech_dev.quotebro.ui.theme.icons.Quote as QuoteIcon
 
 val vibrantGradient = Brush.linearGradient(
     colors = listOf(
@@ -74,7 +107,7 @@ fun ShareQuoteScreen(
     val isSaving by viewModel.isSaving.collectAsStateWithLifecycle()
 
     var capturedBitmap by remember { mutableStateOf<Bitmap?>(null) }
-    
+
     // Set the quote when the screen is displayed
     LaunchedEffect(quoteText, quoteAuthor) {
         viewModel.setQuote(quoteText, quoteAuthor)
@@ -89,9 +122,11 @@ fun ShareQuoteScreen(
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surface,
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surface,
                     navigationIconContentColor = MaterialTheme.colorScheme.onSurface,
-                    titleContentColor = MaterialTheme.colorScheme.onSurface)
+                    titleContentColor = MaterialTheme.colorScheme.onSurface
+                )
             )
         },
         containerColor = MaterialTheme.colorScheme.surface
@@ -111,7 +146,7 @@ fun ShareQuoteScreen(
                     .padding(horizontal = 32.dp)
                     .aspectRatio(1f)
             ) {
-                CapturableContainer(selectedStyle,onBitmapCaptured = { capturedBitmap = it }) {
+                CapturableContainer(selectedStyle, onBitmapCaptured = { capturedBitmap = it }) {
                     QuotePreviewCard(quote = quote, style = selectedStyle)
                 }
             }
@@ -152,9 +187,9 @@ fun ShareQuoteScreen(
 
             // Quick Share Section
             QuickShareButtons(onShare = { platform ->
-                if (platform == SharePlatform.COPY){
+                if (platform == SharePlatform.COPY) {
                     viewModel.copyToClipboard(context)
-                }else{
+                } else {
                     capturedBitmap?.let { viewModel.shareImage(context, it, platform) }
                 }
             })
@@ -169,13 +204,22 @@ fun ShareQuoteScreen(
             ) {
                 Button(
                     onClick = {
-                        capturedBitmap?.let { viewModel.shareImage(context, it, SharePlatform.MORE) }
+                        capturedBitmap?.let {
+                            viewModel.shareImage(
+                                context,
+                                it,
+                                SharePlatform.MORE
+                            )
+                        }
                     },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(56.dp),
                     shape = RoundedCornerShape(28.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = AccentBlue, contentColor = Color.White),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = AccentBlue,
+                        contentColor = Color.White
+                    ),
                     elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp)
                 ) {
                     Icon(Share, contentDescription = null, tint = Color.White)
@@ -191,9 +235,11 @@ fun ShareQuoteScreen(
                             scope.launch {
                                 val result = viewModel.saveToGallery(context, it)
                                 if (result.isSuccess) {
-                                    Toast.makeText(context, "Saved to Photos", Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(context, "Saved to Photos", Toast.LENGTH_SHORT)
+                                        .show()
                                 } else {
-                                    Toast.makeText(context, "Failed to save", Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(context, "Failed to save", Toast.LENGTH_SHORT)
+                                        .show()
                                 }
                             }
                         }
@@ -204,11 +250,22 @@ fun ShareQuoteScreen(
                     enabled = !isSaving
                 ) {
                     if (isSaving) {
-                        CircularProgressIndicator(modifier = Modifier.size(24.dp), strokeWidth = 2.dp)
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(24.dp),
+                            strokeWidth = 2.dp
+                        )
                     } else {
-                        Icon(Download, contentDescription = null, tint = MaterialTheme.colorScheme.onSurface)
+                        Icon(
+                            Download,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurface
+                        )
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("Save to Photos", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Medium)
+                        Text(
+                            "Save to Photos",
+                            color = MaterialTheme.colorScheme.onSurface,
+                            fontWeight = FontWeight.Medium
+                        )
                     }
                 }
             }
@@ -263,7 +320,9 @@ fun QuotePreviewCard(quote: Quote, style: ShareStyle) {
                     text = quote.author,
                     style = MaterialTheme.typography.labelMedium,
                     fontWeight = FontWeight.Bold,
-                    color = (if (style == ShareStyle.MINIMALIST) Color.Black else Color.White).copy(alpha = 0.7f),
+                    color = (if (style == ShareStyle.MINIMALIST) Color.Black else Color.White).copy(
+                        alpha = 0.7f
+                    ),
                     letterSpacing = 1.5.sp
                 )
             }
@@ -274,7 +333,8 @@ fun QuotePreviewCard(quote: Quote, style: ShareStyle) {
 @Composable
 fun StyleSelector(selectedStyle: ShareStyle, onStyleChange: (ShareStyle) -> Unit) {
     val styles = listOf(ShareStyle.MINIMALIST, ShareStyle.MOODY, ShareStyle.VIBRANT)
-    val pagerState = rememberPagerState(initialPage = styles.indexOf(selectedStyle), pageCount = { 3 })
+    val pagerState =
+        rememberPagerState(initialPage = styles.indexOf(selectedStyle), pageCount = { 3 })
 
     LaunchedEffect(pagerState.currentPage) {
         onStyleChange(styles[pagerState.currentPage])
@@ -313,7 +373,10 @@ fun StyleSelector(selectedStyle: ShareStyle, onStyleChange: (ShareStyle) -> Unit
                         ShareStyle.MOODY -> MoodyDark
                         ShareStyle.VIBRANT -> Transparent
                     },
-                    border = if (!isSelected) BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)) else null,
+                    border = if (!isSelected) BorderStroke(
+                        1.dp,
+                        MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)
+                    ) else null,
                     shadowElevation = if (isSelected) 4.dp else 0.dp
                 ) {
                     Box(
@@ -340,7 +403,9 @@ fun StyleSelector(selectedStyle: ShareStyle, onStyleChange: (ShareStyle) -> Unit
                 Text(
                     text = style.name.lowercase().replaceFirstChar { it.uppercase() },
                     style = MaterialTheme.typography.labelMedium,
-                    color = if (isSelected) AccentBlue else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                    color = if (isSelected) AccentBlue else MaterialTheme.colorScheme.onSurface.copy(
+                        alpha = 0.6f
+                    ),
                     fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
                 )
             }
@@ -360,7 +425,11 @@ fun StyleSelector(selectedStyle: ShareStyle, onStyleChange: (ShareStyle) -> Unit
                         .padding(horizontal = 4.dp)
                         .size(if (active) 16.dp else 8.dp, 8.dp)
                         .clip(CircleShape)
-                        .background(if (active) AccentBlue else MaterialTheme.colorScheme.outline.copy(alpha = 0.5f))
+                        .background(
+                            if (active) AccentBlue else MaterialTheme.colorScheme.outline.copy(
+                                alpha = 0.5f
+                            )
+                        )
                 )
             }
         }
@@ -399,11 +468,20 @@ fun QuickShareItem(icon: ImageVector, label: String, onClick: () -> Unit) {
             onClick = onClick
         ) {
             Box(contentAlignment = Alignment.Center) {
-                Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.onSurface, modifier = Modifier.size(24.dp))
+                Icon(
+                    icon,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.size(24.dp)
+                )
             }
         }
         Spacer(modifier = Modifier.height(8.dp))
-        Text(text = label, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurface)
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelMedium,
+            color = MaterialTheme.colorScheme.onSurface
+        )
     }
 }
 
@@ -416,14 +494,22 @@ fun CapturableContainer(
 ) {
     val composeView = remember { mutableStateOf<ComposeView?>(null) }
     val coroutineScope = rememberCoroutineScope()
-    val shadowColor = when(style){
+    val shadowColor = when (style) {
         ShareStyle.VIBRANT -> vibrantGradient
         ShareStyle.MOODY -> Brush.linearGradient(listOf(MoodyDark, MoodyDark))
-        else -> Brush.linearGradient(listOf(MaterialTheme.colorScheme.outline.copy(alpha = 0.2f), MaterialTheme.colorScheme.surface))
+        else -> Brush.linearGradient(
+            listOf(
+                MaterialTheme.colorScheme.outline.copy(alpha = 0.2f),
+                MaterialTheme.colorScheme.surface
+            )
+        )
 
     }
-    AndroidView(modifier = Modifier.dropShadow(RoundedCornerShape(28.dp),
-        Shadow(6.dp,shadowColor)),
+    AndroidView(
+        modifier = Modifier.dropShadow(
+            RoundedCornerShape(28.dp),
+            Shadow(6.dp, shadowColor)
+        ),
         factory = { context ->
             val frameLayout = FrameLayout(context)
             val view = ComposeView(context).apply {
@@ -433,10 +519,10 @@ fun CapturableContainer(
             }
             composeView.value = view
             frameLayout.addView(view)
-            
+
             view.post {
                 if (view.width > 0 && view.height > 0) {
-                    coroutineScope.launch{
+                    coroutineScope.launch {
                         val bitmap = createBitmap(view.width, view.height)
                         val canvas = Canvas(bitmap)
                         view.draw(canvas)
@@ -444,7 +530,7 @@ fun CapturableContainer(
                     }
                 }
             }
-            
+
             frameLayout
         },
         update = {
