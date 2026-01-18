@@ -458,7 +458,7 @@ fun QuoteCard(
                 }
                 IconButton(onClick = { onAddToCollection(-1) }) { // Pass -1 to trigger bottom sheet
                     Icon(
-                        imageVector = Icons.Default.MoreVert,
+                        imageVector = Bookmark,
                         contentDescription = "Add to collection",
                         tint = Black
                     )

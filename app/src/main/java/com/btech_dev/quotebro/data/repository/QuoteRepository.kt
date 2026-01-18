@@ -134,4 +134,10 @@ class QuoteRepository {
             filter { eq("quote_id", quoteId) }
         }.decodeList<CollectionItem>().map { it.collection_id }.toSet()
     }
+
+    suspend fun deleteCollection(collectionId: Long) = withContext(Dispatchers.IO) {
+        postgrest["collections"].delete {
+            filter { eq("id", collectionId) }
+        }
+    }
 }

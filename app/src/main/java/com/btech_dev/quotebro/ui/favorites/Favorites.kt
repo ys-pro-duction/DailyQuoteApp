@@ -1,5 +1,7 @@
 package com.btech_dev.quotebro.ui.favorites
 
+import com.btech_dev.quotebro.ui.home.CollectionsBottomSheet
+
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
@@ -35,6 +37,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -45,6 +48,7 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
@@ -52,6 +56,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -96,6 +101,10 @@ fun FavoritesScreen(
     val pagerState = rememberPagerState(pageCount = { 2 })
     val scope = rememberCoroutineScope()
     val uiState by viewModel.uiState.collectAsState()
+    
+    var showCollectionsSheet by remember { mutableStateOf(false) }
+    var selectedQuoteForCollection by remember { mutableStateOf<Quote?>(null) }
+    val sheetState = rememberModalBottomSheetState()
 
     // Refresh on entry
     LaunchedEffect(Unit) {
@@ -149,7 +158,12 @@ fun FavoritesScreen(
                                     quote = quote,
                                     isLiked = true,
                                     onFavoriteClick = { viewModel.toggleFavorite(quote) },
-                                    onShareQuote = { onShareQuote(quote.content, quote.author) }
+                                    onShareQuote = { onShareQuote(quote.content, quote.author) },
+                                    onAddToCollection = { 
+                                        selectedQuoteForCollection = quote
+                                        if (quote.id != null) viewModel.fetchCollectionsForQuote(quote.id)
+                                        showCollectionsSheet = true 
+                                    }
                                 )
                             }
                         }
@@ -240,6 +254,39 @@ fun FavoritesScreen(
                 }
             )
         }
+        
+        if (showCollectionsSheet) {
+            ModalBottomSheet(
+                onDismissRequest = {
+                    scope.launch { 
+                        sheetState.hide()
+                        showCollectionsSheet = false 
+                    }
+                },
+                sheetState = sheetState,
+                containerColor = BackgroundWhite,
+                contentColor = com.btech_dev.quotebro.ui.theme.TextBlack
+            ) {
+                CollectionsBottomSheet(
+                    collections = uiState.collections,
+                    activeQuoteCollectionIds = uiState.activeQuoteCollectionIds,
+                    onCollectionSelected = { collection ->
+                         selectedQuoteForCollection?.id?.let { quoteId ->
+                            collection.id?.let { collectionId ->
+                                viewModel.toggleQuoteInCollection(quoteId, collectionId)
+                            }
+                        }
+                    },
+                    onDismiss = {
+                        scope.launch { 
+                            sheetState.hide()
+                            showCollectionsSheet = false 
+                        }
+                    }
+                )
+            }
+        }
+        
     }
 }
 
@@ -294,6 +341,7 @@ fun SegmentedControl(
                 }
             }
         }
+        
     }
 }
 
@@ -302,7 +350,8 @@ fun FavoriteQuoteCard(
     quote: Quote,
     isLiked: Boolean = true,
     onFavoriteClick: () -> Unit = {},
-    onShareQuote: () -> Unit
+    onShareQuote: () -> Unit,
+    onAddToCollection: () -> Unit = {}
 ) {
     // For visual variety, we could hash the ID to pick a style, but for now use Default
     // Or we could add a style field to our DB? For now, stick to Default/Simple.
@@ -359,9 +408,21 @@ fun FavoriteQuoteCard(
                             modifier = Modifier.size(20.dp)
                         )
                     }
+                    
+                    Spacer(modifier = Modifier.width(4.dp))
+                    
+                    IconButton(onClick = onAddToCollection) {
+                        Icon(
+                            imageVector = Bookmark,
+                            contentDescription = "Add to Collection",
+                            tint = TextGray,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    }
                 }
             }
         }
+        
     }
 }
 
@@ -423,6 +484,7 @@ fun CollectionCard(
                 }
             }
         }
+        
     }
 }
 
@@ -436,6 +498,12 @@ fun CollectionDetailsScreen(
     viewModel: FavoritesViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    
+    var showCollectionsSheet by remember { mutableStateOf(false) }
+    var selectedQuoteForCollection by remember { mutableStateOf<Quote?>(null) }
+    val sheetState = rememberModalBottomSheetState()
+    val scope = rememberCoroutineScope()
+    var showDeleteDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(collectionId) {
         viewModel.fetchQuotesForCollection(collectionId)
@@ -457,7 +525,16 @@ fun CollectionDetailsScreen(
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
                     containerColor = Transparent,
                     titleContentColor = TextDarkSlate
-                )
+                ),
+                actions = {
+                    IconButton(onClick = { showDeleteDialog = true }) {
+                        Icon(
+                            imageVector = Icons.Default.Delete,
+                            contentDescription = "Delete Collection",
+                            tint = ErrorRed
+                        )
+                    }
+                }
             )
         },
         containerColor = BackgroundWhite
@@ -509,9 +586,74 @@ fun CollectionDetailsScreen(
                         quote = quote,
                         isLiked = isLiked,
                         onFavoriteClick = { viewModel.toggleFavorite(quote) },
-                        onShareQuote = { onShareQuote(quote.content, quote.author) }
+                        onShareQuote = { onShareQuote(quote.content, quote.author) },
+                        onAddToCollection = { 
+                            selectedQuoteForCollection = quote
+                            if (quote.id != null) viewModel.fetchCollectionsForQuote(quote.id)
+                            showCollectionsSheet = true 
+                        }
                     )
                 }
+            }
+        }
+        
+        if (showDeleteDialog) {
+            AlertDialog(
+                onDismissRequest = { showDeleteDialog = false },
+                title = { Text("Delete Collection?") },
+                text = { Text("Are you sure you want to delete this collection? This cannot be undone.", color = TextGray) },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            viewModel.deleteCollection(collectionId) {
+                                showDeleteDialog = false
+                                onBackClick()
+                            }
+                        }
+                    ) {
+                        Text("Delete", color = ErrorRed)
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showDeleteDialog = false }) {
+                        Text("Cancel", color = TextGray)
+                    }
+                },
+                containerColor = BackgroundWhite,
+                titleContentColor = TextDarkSlate,
+                textContentColor = TextDarkSlate
+            )
+        }
+
+        if (showCollectionsSheet) {
+            ModalBottomSheet(
+                onDismissRequest = {
+                    scope.launch { 
+                        sheetState.hide()
+                        showCollectionsSheet = false 
+                    }
+                },
+                sheetState = sheetState,
+                containerColor = BackgroundWhite,
+                contentColor = com.btech_dev.quotebro.ui.theme.TextBlack
+            ) {
+                CollectionsBottomSheet(
+                    collections = uiState.collections,
+                    activeQuoteCollectionIds = uiState.activeQuoteCollectionIds,
+                    onCollectionSelected = { collection ->
+                         selectedQuoteForCollection?.id?.let { quoteId ->
+                            collection.id?.let { collectionId ->
+                                viewModel.toggleQuoteInCollection(quoteId, collectionId)
+                            }
+                        }
+                    },
+                    onDismiss = {
+                         scope.launch { 
+                            sheetState.hide()
+                            showCollectionsSheet = false 
+                        }
+                    }
+                )
             }
         }
     }

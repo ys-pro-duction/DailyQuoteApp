@@ -18,7 +18,8 @@ data class FavoritesUiState(
     val collectionQuotes: List<Quote> = emptyList(),
     val isLoading: Boolean = false,
     val error: String? = null,
-    val showCreateCollectionDialog: Boolean = false
+    val showCreateCollectionDialog: Boolean = false,
+    val activeQuoteCollectionIds: Set<Long> = emptySet()
 )
 
 class FavoritesViewModel(
@@ -92,12 +93,47 @@ class FavoritesViewModel(
         }
     }
     
-    fun addQuoteToCollection(collectionId: Long, quoteId: Long) {
+    fun fetchCollectionsForQuote(quoteId: Long) {
         viewModelScope.launch {
             try {
-                repository.addQuoteToCollection(collectionId, quoteId)
+                val collectionIds = repository.getCollectionsForQuote(quoteId)
+                _uiState.update { it.copy(activeQuoteCollectionIds = collectionIds) }
             } catch (e: Exception) {
-                _uiState.update { it.copy(error = e.message) }
+               // Ignore
+            }
+        }
+    }
+
+    fun toggleQuoteInCollection(quoteId: Long, collectionId: Long) {
+        viewModelScope.launch {
+            val isPresent = _uiState.value.activeQuoteCollectionIds.contains(collectionId)
+            
+            // Optimistic update
+            _uiState.update { 
+                val current = it.activeQuoteCollectionIds.toMutableSet()
+                if (isPresent) current.remove(collectionId) else current.add(collectionId)
+                 it.copy(activeQuoteCollectionIds = current)
+            }
+            
+            try {
+                if (isPresent) {
+                    repository.removeQuoteFromCollection(collectionId, quoteId)
+                    // If we removed from the currently viewed collection, remove from list
+                    if (_uiState.value.selectedCollection?.id == collectionId) {
+                        _uiState.update { 
+                            it.copy(collectionQuotes = it.collectionQuotes.filter { q -> q.id != quoteId })
+                        }
+                    }
+                } else {
+                    repository.addQuoteToCollection(collectionId, quoteId)
+                }
+            } catch (e: Exception) {
+                // Revert
+                 _uiState.update { 
+                   val current = it.activeQuoteCollectionIds.toMutableSet()
+                    if (isPresent) current.add(collectionId) else current.remove(collectionId)
+                    it.copy(activeQuoteCollectionIds = current, error = e.message)
+               }
             }
         }
     }
@@ -142,5 +178,17 @@ class FavoritesViewModel(
     fun refresh() {
         fetchFavorites()
         fetchCollections()
+    }
+
+    fun deleteCollection(collectionId: Long, onSuccess: () -> Unit) {
+        viewModelScope.launch {
+            try {
+                repository.deleteCollection(collectionId)
+                fetchCollections()
+                onSuccess()
+            } catch (e: Exception) {
+                _uiState.update { it.copy(error = e.message) }
+            }
+        }
     }
 }
