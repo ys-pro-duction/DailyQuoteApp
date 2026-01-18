@@ -9,13 +9,15 @@ import androidx.navigation.toRoute
 import com.btech_dev.quotebro.ui.favorites.FavoritesScreen
 import com.btech_dev.quotebro.ui.home.MainHomeContent
 import com.btech_dev.quotebro.ui.settings.SettingsScreen
+import com.btech_dev.quotebro.ui.settings.SettingsViewModel
 
 @Composable
 fun AppNavGraph(
     navController: NavHostController,
     startDestination: Screen,
     onLogOut: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    settingsViewModel: SettingsViewModel? = null
 ) {
     NavHost(
         navController = navController,
@@ -29,7 +31,7 @@ fun AppNavGraph(
                 }
             )
         }
-        
+
         composable<Screen.Favorites> {
             FavoritesScreen(
                 onNavigateToCollectionDetails = { collectionId, collectionName ->
@@ -40,14 +42,15 @@ fun AppNavGraph(
                 }
             )
         }
-        
+
         composable<Screen.Settings> {
             SettingsScreen(
                 onBackClick = { navController.popBackStack() },
-                onLogOutClick = onLogOut
+                onLogOutClick = onLogOut,
+                settingsViewModel = settingsViewModel ?: androidx.lifecycle.viewmodel.compose.viewModel()
             )
         }
-        
+
         composable<Screen.CollectionDetails> { backStackEntry ->
             val args = backStackEntry.toRoute<Screen.CollectionDetails>()
             com.btech_dev.quotebro.ui.favorites.CollectionDetailsScreen(
@@ -59,7 +62,7 @@ fun AppNavGraph(
                 }
             )
         }
-        
+
         composable<Screen.ShareQuote> { backStackEntry ->
             val args = backStackEntry.toRoute<Screen.ShareQuote>()
             com.btech_dev.quotebro.ui.share.ShareQuoteScreen(

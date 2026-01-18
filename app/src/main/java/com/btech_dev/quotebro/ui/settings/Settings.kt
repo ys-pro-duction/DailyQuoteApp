@@ -34,21 +34,8 @@ import com.btech_dev.quotebro.util.AlarmScheduler
 import java.util.Calendar
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.btech_dev.quotebro.ui.login.AuthViewModel
-import com.btech_dev.quotebro.ui.theme.ArrowTint
-import com.btech_dev.quotebro.ui.theme.AvatarBg
-import com.btech_dev.quotebro.ui.theme.BackgroundWhite
-import com.btech_dev.quotebro.ui.theme.DarkGray
-import com.btech_dev.quotebro.ui.theme.ErrorRed
-import com.btech_dev.quotebro.ui.theme.LightGray
 import com.btech_dev.quotebro.ui.theme.PrimaryColor
-import com.btech_dev.quotebro.ui.theme.QuickShareBg
 import com.btech_dev.quotebro.ui.theme.QuoteBroTheme
-import com.btech_dev.quotebro.ui.theme.SliderInactive
-import com.btech_dev.quotebro.ui.theme.TextDarkSlate
-import com.btech_dev.quotebro.ui.theme.TextGray
-import com.btech_dev.quotebro.ui.theme.TextMediumSlate
-import com.btech_dev.quotebro.ui.theme.Transparent
-import com.btech_dev.quotebro.ui.theme.White
 import androidx.core.content.edit
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -56,14 +43,16 @@ import androidx.core.content.edit
 fun SettingsScreen(
     onBackClick: () -> Unit = {},
     onLogOutClick: () -> Unit = {},
-    viewModel: AuthViewModel = viewModel()
+    viewModel: AuthViewModel = viewModel(),
+    settingsViewModel: SettingsViewModel = viewModel()
 ) {
     val authState by viewModel.uiState.collectAsState()
+    val settingsState by settingsViewModel.uiState.collectAsState()
     val name = authState.userProfile?.full_name ?: "User"
     val email = authState.userEmail ?: "user@email.com"
 
     Scaffold(
-        containerColor = BackgroundWhite
+        containerColor = MaterialTheme.colorScheme.background
     ) { paddingValues ->
         LazyColumn(
             modifier = Modifier
@@ -81,8 +70,8 @@ fun SettingsScreen(
                         icon = Icons.Default.ThumbUp,
                         title = "Dark Mode",
                         subtitle = "Reduce eye strain",
-                        checked = false,
-                        onCheckedChange = {}
+                        checked = settingsState.isDarkMode,
+                        onCheckedChange = { settingsViewModel.toggleDarkMode(it) }
                     )
                     SettingsDivider()
                     SettingsSliderItem(
@@ -205,13 +194,13 @@ fun SettingsScreen(
                         .padding(horizontal = 24.dp)
                         .height(56.dp),
                     shape = RoundedCornerShape(50.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = White),
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.surface),
                     elevation = ButtonDefaults.buttonElevation(defaultElevation = 1.dp)
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.AutoMirrored.Filled.ExitToApp, contentDescription = null, tint = ErrorRed)
+                        Icon(Icons.AutoMirrored.Filled.ExitToApp, contentDescription = null, tint = MaterialTheme.colorScheme.error)
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("Log Out", color = ErrorRed, style = MaterialTheme.typography.titleMedium)
+                        Text("Log Out", color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.titleMedium)
                     }
                 }
             }
@@ -220,7 +209,7 @@ fun SettingsScreen(
                 Spacer(modifier = Modifier.height(24.dp))
                 Text(
                     text = "QuoteVault v1.0.2",
-                    color = TextGray,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
                     style = MaterialTheme.typography.bodySmall,
                     modifier = Modifier.padding(bottom = 16.dp)
                 )
@@ -239,22 +228,22 @@ fun ProfileSection(name: String, email: String) {
             Surface(
                 modifier = Modifier.size(120.dp),
                 shape = CircleShape,
-                color = AvatarBg, // Flesh tone background
-                border = BorderStroke(4.dp, White)
+                color = MaterialTheme.colorScheme.primaryContainer,
+                border = BorderStroke(4.dp, MaterialTheme.colorScheme.surface)
             ) {
                 // In a real app, use AsyncImage here
                 Icon(
                     Icons.Default.Person,
                     contentDescription = null,
                     modifier = Modifier.padding(24.dp),
-                    tint = DarkGray
+                    tint = MaterialTheme.colorScheme.onPrimaryContainer
                 )
             }
         }
         Spacer(modifier = Modifier.height(16.dp))
-        Text(name, style = MaterialTheme.typography.headlineMedium)
+        Text(name, style = MaterialTheme.typography.headlineMedium, color = MaterialTheme.colorScheme.onBackground)
         Spacer(modifier = Modifier.height(8.dp))
-        Text(email, color = TextGray, style = MaterialTheme.typography.bodyMedium)
+        Text(email, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f), style = MaterialTheme.typography.bodyMedium)
     }
 }
 
@@ -264,7 +253,7 @@ fun SettingsSectionTitle(title: String) {
         text = title,
         style = MaterialTheme.typography.titleSmall,
         fontWeight = FontWeight.Bold,
-        color = TextMediumSlate,
+        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 24.dp)
@@ -279,7 +268,7 @@ fun SettingsCard(content: @Composable ColumnScope.() -> Unit) {
             .fillMaxWidth()
             .padding(horizontal = 24.dp),
         shape = RoundedCornerShape(24.dp),
-        color = White,
+        color = MaterialTheme.colorScheme.surface,
         shadowElevation = 0.5.dp
     ) {
         Column(content = content)
@@ -291,7 +280,7 @@ fun SettingsDivider() {
     HorizontalDivider(
         modifier = Modifier.padding(horizontal = 16.dp),
         thickness = 0.5.dp,
-        color = LightGray.copy(alpha = 0.3f)
+        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f)
     )
 }
 
@@ -311,7 +300,7 @@ fun SettingsItemBase(
         Surface(
             modifier = Modifier.size(40.dp),
             shape = CircleShape,
-            color = QuickShareBg
+            color = MaterialTheme.colorScheme.surfaceVariant
         ) {
             Box(contentAlignment = Alignment.Center) {
                 Icon(
@@ -324,9 +313,9 @@ fun SettingsItemBase(
         }
         Spacer(modifier = Modifier.width(16.dp))
         Column(modifier = Modifier.weight(1f)) {
-            Text(title, style = MaterialTheme.typography.titleMedium, color = TextDarkSlate)
+            Text(title, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurface)
             if (subtitle != null) {
-                Text(subtitle, color = TextGray, style = MaterialTheme.typography.bodySmall)
+                Text(subtitle, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f), style = MaterialTheme.typography.bodySmall)
             }
         }
         trailingContent()
@@ -340,11 +329,11 @@ fun SettingsToggleItem(icon: ImageVector, title: String, subtitle: String, check
             checked = checked,
             onCheckedChange = onCheckedChange,
             colors = SwitchDefaults.colors(
-                checkedThumbColor = White,
+                checkedThumbColor = MaterialTheme.colorScheme.onPrimary,
                 checkedTrackColor = PrimaryColor,
-                uncheckedThumbColor = White,
-                uncheckedTrackColor = SliderInactive,
-                uncheckedBorderColor = Transparent
+                uncheckedThumbColor = MaterialTheme.colorScheme.surface,
+                uncheckedTrackColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f),
+                uncheckedBorderColor = MaterialTheme.colorScheme.outline
             )
         )
     }
@@ -374,18 +363,18 @@ fun SettingsSliderItem(icon: ImageVector, title: String, badgeText: String) {
                 .padding(bottom = 16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text("A", style = MaterialTheme.typography.labelMedium, color = DarkGray)
+            Text("A", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurface)
             Slider(
                 value = 0.5f,
                 onValueChange = {},
                 modifier = Modifier.weight(1f).padding(horizontal = 12.dp),
                 colors = SliderDefaults.colors(
-                    thumbColor = White,
+                    thumbColor = MaterialTheme.colorScheme.primary,
                     activeTrackColor = PrimaryColor,
-                    inactiveTrackColor = SliderInactive
+                    inactiveTrackColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)
                 )
             )
-            Text("A", style = MaterialTheme.typography.titleLarge, color = DarkGray)
+            Text("A", style = MaterialTheme.typography.titleLarge, color = MaterialTheme.colorScheme.onSurface)
         }
     }
 }
@@ -402,7 +391,7 @@ fun SettingsNavigationItem(icon: ImageVector, title: String) {
             Icons.AutoMirrored.Filled.KeyboardArrowRight,
             contentDescription = null,
             modifier = Modifier.size(16.dp),
-            tint = ArrowTint
+            tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f)
         )
     }
 }

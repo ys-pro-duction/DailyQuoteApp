@@ -35,22 +35,12 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.btech_dev.quotebro.ui.theme.AccentBlue
-import com.btech_dev.quotebro.ui.theme.BackgroundWhite
-import com.btech_dev.quotebro.ui.theme.Black
-import com.btech_dev.quotebro.ui.theme.DarkGray
 import com.btech_dev.quotebro.ui.theme.GradientOrange
 import com.btech_dev.quotebro.ui.theme.GradientPink
 import com.btech_dev.quotebro.ui.theme.GradientPurple
-import com.btech_dev.quotebro.ui.theme.IconDarkSlate
-import com.btech_dev.quotebro.ui.theme.LightGray
 import com.btech_dev.quotebro.ui.theme.MoodyDark
-import com.btech_dev.quotebro.ui.theme.QuickShareBg
 import com.btech_dev.quotebro.ui.theme.QuoteBroTheme
-import com.btech_dev.quotebro.ui.theme.TextBlack
-import com.btech_dev.quotebro.ui.theme.TextLightSlate
-import com.btech_dev.quotebro.ui.theme.TextMediumSlate
 import com.btech_dev.quotebro.ui.theme.Transparent
-import com.btech_dev.quotebro.ui.theme.White
 import com.btech_dev.quotebro.ui.theme.icons.Quote as QuoteIcon
 import kotlinx.coroutines.launch
 import androidx.core.graphics.createBitmap
@@ -99,12 +89,12 @@ fun ShareQuoteScreen(
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
                     }
                 },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = BackgroundWhite,
-                    navigationIconContentColor = TextBlack,
-                    titleContentColor = TextBlack)
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surface,
+                    navigationIconContentColor = MaterialTheme.colorScheme.onSurface,
+                    titleContentColor = MaterialTheme.colorScheme.onSurface)
             )
         },
-        containerColor = BackgroundWhite
+        containerColor = MaterialTheme.colorScheme.surface
     ) { padding ->
         Column(
             modifier = Modifier
@@ -145,7 +135,7 @@ fun ShareQuoteScreen(
                         ShareStyle.MINIMALIST -> "Clean & Simple"
                         ShareStyle.MOODY -> "Glass Morphism"
                     },
-                    color = DarkGray,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
                     style = MaterialTheme.typography.bodyMedium
                 )
             }
@@ -185,10 +175,10 @@ fun ShareQuoteScreen(
                         .fillMaxWidth()
                         .height(56.dp),
                     shape = RoundedCornerShape(28.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = AccentBlue, contentColor = White),
+                    colors = ButtonDefaults.buttonColors(containerColor = AccentBlue, contentColor = Color.White),
                     elevation = ButtonDefaults.buttonElevation(defaultElevation = 4.dp)
                 ) {
-                    Icon(Share, contentDescription = null, tint = White)
+                    Icon(Share, contentDescription = null, tint = Color.White)
                     Spacer(modifier = Modifier.width(8.dp))
                     Text("Share Image", fontSize = 16.sp, fontWeight = FontWeight.Bold)
                 }
@@ -216,9 +206,9 @@ fun ShareQuoteScreen(
                     if (isSaving) {
                         CircularProgressIndicator(modifier = Modifier.size(24.dp), strokeWidth = 2.dp)
                     } else {
-                        Icon(Download, contentDescription = null, tint = DarkGray)
+                        Icon(Download, contentDescription = null, tint = MaterialTheme.colorScheme.onSurface)
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("Save to Photos", color = DarkGray, fontWeight = FontWeight.Medium)
+                        Text("Save to Photos", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Medium)
                     }
                 }
             }
@@ -236,7 +226,7 @@ fun QuotePreviewCard(quote: Quote, style: ShareStyle) {
         shape = RoundedCornerShape(24.dp),
         color = when (style) {
             ShareStyle.VIBRANT -> Transparent
-            ShareStyle.MINIMALIST -> White
+            ShareStyle.MINIMALIST -> Color.White
             ShareStyle.MOODY -> MoodyDark
         },
         shadowElevation = 2.dp
@@ -257,14 +247,14 @@ fun QuotePreviewCard(quote: Quote, style: ShareStyle) {
                 Icon(
                     imageVector = QuoteIcon,
                     contentDescription = null,
-                    tint = if (style == ShareStyle.MINIMALIST) Black else White,
+                    tint = if (style == ShareStyle.MINIMALIST) Color.Black else Color.White,
                     modifier = Modifier.size(32.dp)
                 )
                 Spacer(modifier = Modifier.height(24.dp))
                 Text(
                     text = quote.text,
                     style = MaterialTheme.typography.headlineSmall,
-                    color = if (style == ShareStyle.MINIMALIST) Black else White,
+                    color = if (style == ShareStyle.MINIMALIST) Color.Black else Color.White,
                     textAlign = TextAlign.Center,
                     lineHeight = 32.sp
                 )
@@ -273,7 +263,7 @@ fun QuotePreviewCard(quote: Quote, style: ShareStyle) {
                     text = quote.author,
                     style = MaterialTheme.typography.labelMedium,
                     fontWeight = FontWeight.Bold,
-                    color = (if (style == ShareStyle.MINIMALIST) Black else White).copy(alpha = 0.7f),
+                    color = (if (style == ShareStyle.MINIMALIST) Color.Black else Color.White).copy(alpha = 0.7f),
                     letterSpacing = 1.5.sp
                 )
             }
@@ -319,11 +309,11 @@ fun StyleSelector(selectedStyle: ShareStyle, onStyleChange: (ShareStyle) -> Unit
                         .clickable { onStyleChange(style) },
                     shape = RoundedCornerShape(16.dp),
                     color = when (style) {
-                        ShareStyle.MINIMALIST -> White
+                        ShareStyle.MINIMALIST -> Color.White
                         ShareStyle.MOODY -> MoodyDark
                         ShareStyle.VIBRANT -> Transparent
                     },
-                    border = if (!isSelected) BorderStroke(1.dp, LightGray.copy(alpha = 0.5f)) else null,
+                    border = if (!isSelected) BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)) else null,
                     shadowElevation = if (isSelected) 4.dp else 0.dp
                 ) {
                     Box(
@@ -340,7 +330,7 @@ fun StyleSelector(selectedStyle: ShareStyle, onStyleChange: (ShareStyle) -> Unit
                             text = "Aa",
                             style = MaterialTheme.typography.labelLarge,
                             fontWeight = FontWeight.Bold,
-                            color = if (style == ShareStyle.MINIMALIST) Black else White,
+                            color = if (style == ShareStyle.MINIMALIST) Color.Black else Color.White,
                             textAlign = TextAlign.Center,
                             modifier = Modifier.padding(8.dp)
                         )
@@ -350,7 +340,7 @@ fun StyleSelector(selectedStyle: ShareStyle, onStyleChange: (ShareStyle) -> Unit
                 Text(
                     text = style.name.lowercase().replaceFirstChar { it.uppercase() },
                     style = MaterialTheme.typography.labelMedium,
-                    color = if (isSelected) AccentBlue else DarkGray,
+                    color = if (isSelected) AccentBlue else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
                     fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium
                 )
             }
@@ -370,7 +360,7 @@ fun StyleSelector(selectedStyle: ShareStyle, onStyleChange: (ShareStyle) -> Unit
                         .padding(horizontal = 4.dp)
                         .size(if (active) 16.dp else 8.dp, 8.dp)
                         .clip(CircleShape)
-                        .background(if (active) AccentBlue else LightGray.copy(alpha = 0.5f))
+                        .background(if (active) AccentBlue else MaterialTheme.colorScheme.outline.copy(alpha = 0.5f))
                 )
             }
         }
@@ -383,7 +373,7 @@ fun QuickShareButtons(onShare: (SharePlatform) -> Unit) {
         Text(
             text = "QUICK SHARE",
             style = MaterialTheme.typography.labelSmall,
-            color = TextLightSlate,
+            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
             letterSpacing = 1.sp
         )
         Spacer(modifier = Modifier.height(20.dp))
@@ -405,15 +395,15 @@ fun QuickShareItem(icon: ImageVector, label: String, onClick: () -> Unit) {
         Surface(
             modifier = Modifier.size(64.dp),
             shape = CircleShape,
-            color = QuickShareBg,
+            color = MaterialTheme.colorScheme.surfaceVariant,
             onClick = onClick
         ) {
             Box(contentAlignment = Alignment.Center) {
-                Icon(icon, contentDescription = null, tint = IconDarkSlate, modifier = Modifier.size(24.dp))
+                Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.onSurface, modifier = Modifier.size(24.dp))
             }
         }
         Spacer(modifier = Modifier.height(8.dp))
-        Text(text = label, style = MaterialTheme.typography.labelMedium, color = TextMediumSlate)
+        Text(text = label, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurface)
     }
 }
 
@@ -429,10 +419,10 @@ fun CapturableContainer(
     val shadowColor = when(style){
         ShareStyle.VIBRANT -> vibrantGradient
         ShareStyle.MOODY -> Brush.linearGradient(listOf(MoodyDark, MoodyDark))
-        else -> Brush.linearGradient(listOf(LightGray, SurfaceLightGray))
+        else -> Brush.linearGradient(listOf(MaterialTheme.colorScheme.outline.copy(alpha = 0.2f), MaterialTheme.colorScheme.surface))
 
     }
-    AndroidView(modifier = Modifier.dropShadow(RoundedCornerShape(16.dp),
+    AndroidView(modifier = Modifier.dropShadow(RoundedCornerShape(28.dp),
         Shadow(6.dp,shadowColor)),
         factory = { context ->
             val frameLayout = FrameLayout(context)

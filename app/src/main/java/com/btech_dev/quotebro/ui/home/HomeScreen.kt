@@ -51,6 +51,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
@@ -87,6 +88,15 @@ private val LightGradients = listOf(
     listOf(Color(0xFFF1F8E9), Color(0xFFAED581))
 )
 
+private val DarkGradients = listOf(
+    listOf(Color(0xFF1E3A5F), Color(0xFF2E5A8F)),
+    listOf(Color(0xFF3D2B4A), Color(0xFF5C3A5E)),
+    listOf(Color(0xFF2A4A47), Color(0xFF3D6B66)),
+    listOf(Color(0xFF4A3520), Color(0xFF6B5030)),
+    listOf(Color(0xFF4A2A3A), Color(0xFF693A50)),
+    listOf(Color(0xFF3A4A2A), Color(0xFF5A6B3A))
+)
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainHomeContent(
@@ -100,10 +110,10 @@ fun MainHomeContent(
     val sheetState = rememberModalBottomSheetState()
     val coroutineScope = rememberCoroutineScope()
 
-    Box(modifier = Modifier.fillMaxSize()) {
+    Box(modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.surface)) {
         if (uiState.isLoading) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator(color = PrimaryColor)
+                CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
             }
         } else if (uiState.error != null) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -117,7 +127,7 @@ fun MainHomeContent(
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(BackgroundWhite),
+                    .background(MaterialTheme.colorScheme.surface),
                 contentPadding = PaddingValues(
                     top = 120.dp,
                     bottom = 120.dp,
@@ -131,7 +141,8 @@ fun MainHomeContent(
                     QuoteOfTheDay(
                         quote = qod,
                         isLiked = qod != null && uiState.likedQuoteIds.contains(qod.id),
-                        onFavoriteClick = { if (qod != null) viewModel.toggleFavorite(qod) }
+                        onFavoriteClick = { if (qod != null) viewModel.toggleFavorite(qod) },
+                        onShareQuote = {onShareQuote(qod!!.content, qod.author)}
                     )
                 }
                 item {
@@ -146,7 +157,6 @@ fun MainHomeContent(
                         isLiked = uiState.likedQuoteIds.contains(quote.id),
                         onFavoriteClick = { viewModel.toggleFavorite(quote) },
                         onShareClick = { onShareQuote(quote.content, quote.author) },
-                        collections = uiState.collections,
                         onAddToCollection = {
                             selectedQuoteForCollection = quote
                             if (quote.id != null) viewModel.fetchCollectionsForQuote(quote.id)
@@ -167,8 +177,8 @@ fun MainHomeContent(
                     }
                 },
                 sheetState = sheetState,
-                containerColor = BackgroundWhite,
-                contentColor = TextBlack
+                containerColor = MaterialTheme.colorScheme.surface,
+                contentColor = MaterialTheme.colorScheme.onSurface
             ) {
                 CollectionsBottomSheet(
                     collections = uiState.collections,
@@ -210,9 +220,10 @@ fun TopBar() {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .background(BackgroundWhite)
-            .statusBarsPadding()
-            .padding(horizontal = 16.dp, vertical = 12.dp),
+            .background(MaterialTheme.colorScheme.surface)
+            .shadow(0.4.dp).statusBarsPadding()
+            .padding(horizontal = 16.dp, vertical = 12.dp)
+            ,
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
@@ -235,14 +246,14 @@ fun TopBar() {
             Text(
                 text = "QuoteVault",
                 style = MaterialTheme.typography.titleLarge,
-                color = Black
+                color = MaterialTheme.colorScheme.onBackground
             )
         }
     }
 }
 
 @Composable
-fun QuoteOfTheDay(quote: Quote?, isLiked: Boolean = false, onFavoriteClick: () -> Unit = {}) {
+fun QuoteOfTheDay(quote: Quote?, isLiked: Boolean = false, onFavoriteClick: () -> Unit = {}, onShareQuote: () -> Unit = {}) {
     if (quote == null) return
 
     Box(
@@ -255,6 +266,7 @@ fun QuoteOfTheDay(quote: Quote?, isLiked: Boolean = false, onFavoriteClick: () -
                     colors = listOf(SecondaryColor, PrimaryColor)
                 )
             )
+            .clickable(){onShareQuote()}
             .padding(24.dp)
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
@@ -327,7 +339,7 @@ fun CategoriesSection(
             Surface(
                 onClick = { onCategorySelected(category) },
                 shape = RoundedCornerShape(50),
-                color = if (isSelected) PrimaryColor else SurfaceLightGray,
+                color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant,
                 modifier = Modifier.height(40.dp)
             ) {
                 Box(
@@ -338,7 +350,7 @@ fun CategoriesSection(
                         text = category,
                         style = MaterialTheme.typography.labelLarge,
                         fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
-                        color = if (isSelected) White else DarkGray
+                        color = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
@@ -352,18 +364,21 @@ fun QuoteCard(
     isLiked: Boolean,
     onFavoriteClick: () -> Unit,
     onShareClick: () -> Unit = {},
-    collections: List<com.btech_dev.quotebro.data.model.Collection> = emptyList(),
     onAddToCollection: (Long) -> Unit = {}
 ) {
-    val backgroundGradient = remember(quote.id) {
+    // Check if theme is dark by checking background brightness
+    val backgroundColor = MaterialTheme.colorScheme.surface
+    val isDarkTheme = (backgroundColor.red + backgroundColor.green + backgroundColor.blue) / 3f < 0.5f
+    val backgroundGradient = remember(quote.id, isDarkTheme) {
         val index = (quote.id?.hashCode() ?: 0).absoluteValue % LightGradients.size
-        Brush.linearGradient(LightGradients[index])
+        val gradients = if (isDarkTheme) DarkGradients else LightGradients
+        Brush.linearGradient(gradients[index])
     }
 
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(32.dp),
-        colors = CardDefaults.cardColors(containerColor = White),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column {
@@ -388,23 +403,23 @@ fun QuoteCard(
                     verticalArrangement = Arrangement.SpaceBetween
                 ) {
                     Surface(
-                        color = Black.copy(alpha = 0.05f),
-                        shape = RoundedCornerShape(50)
-                    ) {
-                        Text(
-                            text = quote.category,
-                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
-                            style = MaterialTheme.typography.labelMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = TextDarkSlate
-                        )
-                    }
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = if (isDarkTheme) 0.15f else 0.05f),
+                shape = RoundedCornerShape(50)
+            ) {
+                Text(
+                    text = quote.category,
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+            }
 
                     Column {
                         Text(
                             text = quote.content,
                             style = MaterialTheme.typography.headlineSmall,
-                            color = TextDarkSlate,
+                            color = MaterialTheme.colorScheme.onSurface,
                             lineHeight = 30.sp,
                             maxLines = 4
                         )
@@ -412,7 +427,7 @@ fun QuoteCard(
                         Text(
                             text = "— ${quote.author}",
                             style = MaterialTheme.typography.bodyLarge,
-                            color = TextDarkSlate.copy(0.7f)
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                         )
                     }
                 }
@@ -432,7 +447,7 @@ fun QuoteCard(
                             Icon(
                                 imageVector = if (isLiked) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
                                 contentDescription = "Favorite",
-                                tint = if (isLiked) ErrorRed else DarkGray,
+                                tint = if (isLiked) ErrorRed else MaterialTheme.colorScheme.onBackground,
                                 modifier = Modifier
                                     .size(20.dp)
                             )
@@ -440,7 +455,7 @@ fun QuoteCard(
                         Text(
                             text = "Like",
                             style = MaterialTheme.typography.labelLarge,
-                            color = Black,
+                            color = MaterialTheme.colorScheme.onSurface,
                             modifier = Modifier.padding(start = 42.dp)
                         )
                     }
@@ -449,7 +464,7 @@ fun QuoteCard(
                         Icon(
                             imageVector = com.btech_dev.quotebro.ui.theme.icons.Share,
                             contentDescription = "Share",
-                            tint = Black,
+                            tint = MaterialTheme.colorScheme.onSurface,
                             modifier = Modifier
                                 .size(20.dp)
                         )
@@ -460,7 +475,7 @@ fun QuoteCard(
                     Icon(
                         imageVector = Bookmark,
                         contentDescription = "Add to collection",
-                        tint = Black
+                        tint = MaterialTheme.colorScheme.onSurface
                     )
                 }
             }
@@ -494,18 +509,18 @@ fun CollectionsBottomSheet(
                 text = "Add to Collection",
                 fontSize = 20.sp,
                 fontWeight = FontWeight.Bold,
-                color = Black
+                color = MaterialTheme.colorScheme.onSurface
             )
             IconButton(onClick = onDismiss) {
                 Icon(
                     imageVector = Icons.Default.Close,
                     contentDescription = "Close",
-                    tint = Black
+                    tint = MaterialTheme.colorScheme.onSurface
                 )
             }
         }
 
-        HorizontalDivider(color = LightGray.copy(alpha = 0.3f))
+        HorizontalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f))
 
         if (collections.isEmpty()) {
             Box(
@@ -516,7 +531,7 @@ fun CollectionsBottomSheet(
             ) {
                 Text(
                     text = "No collections yet",
-                    color = TextGray,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
                     style = MaterialTheme.typography.bodyLarge
                 )
             }
@@ -531,7 +546,7 @@ fun CollectionsBottomSheet(
                             .fillMaxWidth()
                             .padding(vertical = 4.dp),
                         shape = RoundedCornerShape(12.dp),
-                        color = SurfaceWhite,
+                        color = MaterialTheme.colorScheme.surfaceVariant,
                         border = if (collection.id != null && activeQuoteCollectionIds.contains(
                                 collection.id
                             )
@@ -563,13 +578,13 @@ fun CollectionsBottomSheet(
                                 Text(
                                     text = collection.name,
                                     style = MaterialTheme.typography.titleMedium,
-                                    color = Black
+                                    color = MaterialTheme.colorScheme.onSurface
                                 )
                                 if (collection.description != null) {
                                     Text(
                                         text = collection.description,
                                         style = MaterialTheme.typography.bodyMedium,
-                                        color = TextGray,
+                                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
                                         maxLines = 1
                                     )
                                 }

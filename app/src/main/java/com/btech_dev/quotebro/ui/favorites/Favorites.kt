@@ -76,15 +76,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.btech_dev.quotebro.data.model.Quote
-import com.btech_dev.quotebro.ui.theme.BackgroundWhite
-import com.btech_dev.quotebro.ui.theme.Black
-import com.btech_dev.quotebro.ui.theme.DarkGray
 import com.btech_dev.quotebro.ui.theme.ErrorRed
 import com.btech_dev.quotebro.ui.theme.PrimaryColor
 import com.btech_dev.quotebro.ui.theme.QuoteBroTheme
-import com.btech_dev.quotebro.ui.theme.SegmentedControlBg
-import com.btech_dev.quotebro.ui.theme.TextDarkSlate
-import com.btech_dev.quotebro.ui.theme.TextGray
 import com.btech_dev.quotebro.ui.theme.Transparent
 import com.btech_dev.quotebro.ui.theme.White
 import com.btech_dev.quotebro.ui.theme.icons.Bookmark
@@ -114,7 +108,7 @@ fun FavoritesScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(BackgroundWhite)
+            .background(MaterialTheme.colorScheme.surface)
             .statusBarsPadding()
     ) {
         Column(
@@ -143,7 +137,7 @@ fun FavoritesScreen(
                         }
                     } else if (uiState.favoriteQuotes.isEmpty()) {
                         Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                            Text("No favorites yet", color = TextGray)
+                            Text("No favorites yet", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
                         }
                     } else {
                         LazyVerticalStaggeredGrid(
@@ -180,17 +174,17 @@ fun FavoritesScreen(
                                     imageVector = Bookmark,
                                     contentDescription = null,
                                     modifier = Modifier.size(64.dp),
-                                    tint = TextGray.copy(alpha = 0.5f)
+                                    tint = MaterialTheme.colorScheme.secondary
                                 )
                                 Spacer(modifier = Modifier.height(16.dp))
                                 Text(
                                     text = "No collections yet",
-                                    color = TextGray,
+                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
                                     style = MaterialTheme.typography.bodyMedium
                                 )
                                 Text(
                                     text = "Tap + to create one",
-                                    color = TextGray.copy(alpha = 0.7f),
+                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.4f),
                                     style = MaterialTheme.typography.bodySmall
                                 )
                             }
@@ -229,7 +223,7 @@ fun FavoritesScreen(
             FloatingActionButton(
                 onClick = { viewModel.showCreateCollectionDialog() },
                 containerColor = PrimaryColor,
-                contentColor = White,
+                contentColor = MaterialTheme.colorScheme.onPrimary,
                 shape = CircleShape,
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
@@ -264,8 +258,8 @@ fun FavoritesScreen(
                     }
                 },
                 sheetState = sheetState,
-                containerColor = BackgroundWhite,
-                contentColor = com.btech_dev.quotebro.ui.theme.TextBlack
+                containerColor = MaterialTheme.colorScheme.surface,
+                contentColor = MaterialTheme.colorScheme.onSurface
             ) {
                 CollectionsBottomSheet(
                     collections = uiState.collections,
@@ -303,7 +297,7 @@ fun SegmentedControl(
             .fillMaxWidth()
             .height(48.dp),
         shape = RoundedCornerShape(50),
-        color = SegmentedControlBg
+        color = MaterialTheme.colorScheme.surfaceVariant
     ) {
         BoxWithConstraints(modifier = Modifier.padding(4.dp)) {
             val maxWidth = maxWidth
@@ -315,7 +309,7 @@ fun SegmentedControl(
                     .width(indicatorWidth)
                     .fillMaxHeight()
                     .shadow(elevation = 2.dp, shape = RoundedCornerShape(50))
-                    .background(White, shape = RoundedCornerShape(50))
+                    .background(MaterialTheme.colorScheme.surface, shape = RoundedCornerShape(50))
             )
 
             Row(modifier = Modifier.fillMaxSize()) {
@@ -335,7 +329,7 @@ fun SegmentedControl(
                             text = title,
                             style = MaterialTheme.typography.labelLarge,
                             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Medium,
-                            color = if (isSelected) PrimaryColor else TextGray
+                            color = if (isSelected) PrimaryColor else MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
@@ -358,7 +352,7 @@ fun FavoriteQuoteCard(
 
     Surface(
         shape = RoundedCornerShape(32.dp),
-        color = White,
+        color = MaterialTheme.colorScheme.surfaceVariant,
         shadowElevation = 1.dp,
     ) {
         Column(
@@ -369,7 +363,7 @@ fun FavoriteQuoteCard(
             Icon(
                 imageVector = QuoteIcon,
                 contentDescription = null,
-                tint = PrimaryColor.copy(alpha = 0.3f),
+                tint = MaterialTheme.colorScheme.secondary,
                 modifier = Modifier.size(24.dp)
             )
             Spacer(modifier = Modifier.height(12.dp))
@@ -378,7 +372,7 @@ fun FavoriteQuoteCard(
                 text = quote.content,
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
-                color = TextDarkSlate,
+                color = MaterialTheme.colorScheme.onSurface,
                 textAlign = TextAlign.Start,
                 modifier = Modifier.fillMaxWidth()
             )
@@ -388,7 +382,7 @@ fun FavoriteQuoteCard(
                 text = quote.author,
                 style = MaterialTheme.typography.labelMedium,
                 fontWeight = FontWeight.SemiBold,
-                color = TextGray
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -404,18 +398,18 @@ fun FavoriteQuoteCard(
                         Icon(
                             imageVector = if (isLiked) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
                             contentDescription = "Liked",
-                            tint = if (isLiked) ErrorRed else TextGray,
+                            tint = if (isLiked) ErrorRed else White,
                             modifier = Modifier.size(20.dp)
                         )
                     }
-                    
+
                     Spacer(modifier = Modifier.width(4.dp))
-                    
+
                     IconButton(onClick = onAddToCollection) {
                         Icon(
                             imageVector = Bookmark,
                             contentDescription = "Add to Collection",
-                            tint = TextGray,
+                            tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
                             modifier = Modifier.size(24.dp)
                         )
                     }
@@ -433,7 +427,7 @@ fun CollectionCard(
 ) {
     Surface(
         shape = RoundedCornerShape(20.dp),
-        color = White,
+        color = MaterialTheme.colorScheme.surfaceVariant,
         shadowElevation = 2.dp,
         modifier = Modifier
             .fillMaxWidth()
@@ -469,7 +463,7 @@ fun CollectionCard(
                         text = collection.name,
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
-                        color = TextDarkSlate,
+                        color = MaterialTheme.colorScheme.onSurface,
                         maxLines = 1
                     )
                     if (collection.description != null) {
@@ -477,7 +471,7 @@ fun CollectionCard(
                         Text(
                             text = collection.description,
                             style = MaterialTheme.typography.bodySmall,
-                            color = TextGray,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
                             maxLines = 2
                         )
                     }
@@ -518,26 +512,26 @@ fun CollectionDetailsScreen(
                         Icon(
                             Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back",
-                            tint = TextDarkSlate
+                            tint = MaterialTheme.colorScheme.onSurface
                         )
                     }
                 },
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
                     containerColor = Transparent,
-                    titleContentColor = TextDarkSlate
+                    titleContentColor = MaterialTheme.colorScheme.onSurface
                 ),
                 actions = {
                     IconButton(onClick = { showDeleteDialog = true }) {
                         Icon(
                             imageVector = Icons.Default.Delete,
                             contentDescription = "Delete Collection",
-                            tint = ErrorRed
+                            tint = MaterialTheme.colorScheme.error
                         )
                     }
                 }
             )
         },
-        containerColor = BackgroundWhite
+        containerColor = MaterialTheme.colorScheme.surface
     ) { paddingValues ->
         if (uiState.isLoading) {
             Box(
@@ -560,12 +554,12 @@ fun CollectionDetailsScreen(
                         imageVector = Bookmark,
                         contentDescription = null,
                         modifier = Modifier.size(64.dp),
-                        tint = TextGray.copy(alpha = 0.5f)
+                        tint = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f)
                     )
                     Spacer(modifier = Modifier.height(16.dp))
                     Text(
                         text = "No quotes in this collection yet",
-                        color = TextGray,
+                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
                         style = MaterialTheme.typography.bodyMedium
                     )
                 }
@@ -601,7 +595,7 @@ fun CollectionDetailsScreen(
             AlertDialog(
                 onDismissRequest = { showDeleteDialog = false },
                 title = { Text("Delete Collection?") },
-                text = { Text("Are you sure you want to delete this collection? This cannot be undone.", color = TextGray) },
+                text = { Text("Are you sure you want to delete this collection? This cannot be undone.", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)) },
                 confirmButton = {
                     TextButton(
                         onClick = {
@@ -611,17 +605,17 @@ fun CollectionDetailsScreen(
                             }
                         }
                     ) {
-                        Text("Delete", color = ErrorRed)
+                        Text("Delete", color = MaterialTheme.colorScheme.error)
                     }
                 },
                 dismissButton = {
                     TextButton(onClick = { showDeleteDialog = false }) {
-                        Text("Cancel", color = TextGray)
+                        Text("Cancel", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
                     }
                 },
-                containerColor = BackgroundWhite,
-                titleContentColor = TextDarkSlate,
-                textContentColor = TextDarkSlate
+                containerColor = MaterialTheme.colorScheme.surface,
+                titleContentColor = MaterialTheme.colorScheme.onSurface,
+                textContentColor = MaterialTheme.colorScheme.onSurface
             )
         }
 
@@ -634,8 +628,8 @@ fun CollectionDetailsScreen(
                     }
                 },
                 sheetState = sheetState,
-                containerColor = BackgroundWhite,
-                contentColor = com.btech_dev.quotebro.ui.theme.TextBlack
+                containerColor = MaterialTheme.colorScheme.surface,
+                contentColor = MaterialTheme.colorScheme.onSurface
             ) {
                 CollectionsBottomSheet(
                     collections = uiState.collections,
@@ -668,9 +662,9 @@ fun CreateCollectionDialog(
     var description by remember { mutableStateOf("") }
 
     AlertDialog(
-        containerColor = BackgroundWhite,
-        titleContentColor = TextDarkSlate,
-        textContentColor = TextDarkSlate,
+        containerColor = MaterialTheme.colorScheme.surface,
+        titleContentColor = MaterialTheme.colorScheme.onSurface,
+        textContentColor = MaterialTheme.colorScheme.onSurface,
         onDismissRequest = onDismiss,
         title = {
             Text(
@@ -689,9 +683,9 @@ fun CreateCollectionDialog(
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = PrimaryColor,
                         focusedLabelColor = PrimaryColor,
-                        unfocusedLabelColor = DarkGray,
-                        focusedTextColor = Black,
-                        unfocusedTextColor = TextDarkSlate,
+                        unfocusedLabelColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                        focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                        unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
                     )
                 )
                 Spacer(modifier = Modifier.height(12.dp))
@@ -704,9 +698,9 @@ fun CreateCollectionDialog(
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedBorderColor = PrimaryColor,
                         focusedLabelColor = PrimaryColor,
-                        unfocusedLabelColor = DarkGray,
-                        focusedTextColor = Black,
-                        unfocusedTextColor = TextDarkSlate,
+                        unfocusedLabelColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                        focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                        unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
                     )
                 )
             }
@@ -724,12 +718,12 @@ fun CreateCollectionDialog(
                 ),
                 enabled = name.isNotBlank()
             ) {
-                Text("Create", color = White)
+                Text("Create", color = MaterialTheme.colorScheme.onPrimary)
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancel", color = TextGray)
+                Text("Cancel", color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f))
             }
         }
     )

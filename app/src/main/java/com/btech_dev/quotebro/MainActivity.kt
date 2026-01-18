@@ -5,6 +5,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.slideInVertically
@@ -12,6 +13,7 @@ import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Home
@@ -20,9 +22,11 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavDestination.Companion.hasRoute
@@ -35,19 +39,24 @@ import com.btech_dev.quotebro.ui.login.AuthScreen
 import com.btech_dev.quotebro.ui.login.AuthViewModel
 import com.btech_dev.quotebro.ui.navigation.AppNavGraph
 import com.btech_dev.quotebro.ui.navigation.Screen
+import com.btech_dev.quotebro.ui.settings.SettingsViewModel
 import com.btech_dev.quotebro.ui.theme.PrimaryColor
 import com.btech_dev.quotebro.ui.theme.QuoteBroTheme
+import com.btech_dev.quotebro.ui.theme.SurfaceWhite
 import com.btech_dev.quotebro.ui.theme.TextGray
+import com.btech_dev.quotebro.ui.theme.White
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        enableEdgeToEdge(statusBarStyle = SystemBarStyle.light(Color.Transparent.toArgb(), Color.Transparent.toArgb()))
+        enableEdgeToEdge(statusBarStyle = SystemBarStyle.auto(Color.Transparent.toArgb(), Color.Transparent.toArgb()))
         setContent {
+            val settingsViewModel: SettingsViewModel = viewModel()
+            val settingsState by settingsViewModel.uiState.collectAsState()
 
-            QuoteBroTheme {
-                MainScreen()
+            QuoteBroTheme(darkTheme = settingsState.isDarkMode) {
+                MainScreen(settingsViewModel = settingsViewModel)
             }
         }
     }
@@ -61,7 +70,8 @@ data class BottomNavItem(
 
 @Composable
 fun MainScreen(
-    authViewModel: AuthViewModel = viewModel()
+    authViewModel: AuthViewModel = viewModel(),
+    settingsViewModel: SettingsViewModel = viewModel()
 ) {
     val authState by authViewModel.uiState.collectAsState()
     val navController = rememberNavController()
@@ -92,7 +102,8 @@ fun MainScreen(
                     navController = navController,
                     startDestination = Screen.Home,
                     onLogOut = { authViewModel.signOut() },
-                    modifier = Modifier.fillMaxSize()
+                    modifier = Modifier.fillMaxSize(),
+                    settingsViewModel = settingsViewModel
                 )
                 
                 // Animated Top Bar - only on Home screen
@@ -125,9 +136,9 @@ fun MainScreen(
                     modifier = Modifier.align(Alignment.BottomCenter)
                 ) {
                     NavigationBar(
-                        modifier = Modifier.navigationBarsPadding(),
-                        containerColor = Color.White,
-                        tonalElevation = 8.dp
+                        modifier = Modifier.navigationBarsPadding()
+                            .shadow(4.dp),
+                        containerColor = MaterialTheme.colorScheme.surface,
                     ) {
                         bottomNavItems.forEach { item ->
                             val selected = currentDestination?.hasRoute(item.route::class) == true
@@ -159,7 +170,7 @@ fun MainScreen(
         } else {
             AuthScreen(
                 viewModel = authViewModel,
-                onAuthSuccess = { /* State update will trigger recomposition */ }
+                onAuthSuccess = { navController.navigate(Screen.Home) }
             )
         }
     }
