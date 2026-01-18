@@ -9,7 +9,15 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import android.app.Application
+import android.content.Context
+import androidx.lifecycle.AndroidViewModel
 import kotlinx.coroutines.launch
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 data class HomeUiState(
     val quotes: List<Quote> = emptyList(),
@@ -18,21 +26,60 @@ data class HomeUiState(
     val collections: List<Collection> = emptyList(),
     val selectedCategory: String? = null,
     val isLoading: Boolean = false,
-    val error: String? = null
+    val error: String? = null,
+    val quoteOfTheDay: Quote? = null // Added
 )
 
 class HomeViewModel(
+    application: Application
+) : AndroidViewModel(application) {
+
     private val repository: QuoteRepository = QuoteRepository()
-) : ViewModel() {
 
     private val _uiState = MutableStateFlow(HomeUiState())
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
 
     init {
-        fetchQuotes()
+        checkQuoteOfTheDay()
         fetchQuotes()
         fetchCollections()
         fetchFavorites()
+    }
+
+    private fun checkQuoteOfTheDay() {
+        viewModelScope.launch {
+            val prefs = getApplication<Application>().getSharedPreferences("daily_quote", Context.MODE_PRIVATE)
+            val today = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
+            val savedDate = prefs.getString("date", "")
+            
+            if (savedDate == today) {
+                val json = prefs.getString("quote_json", null)
+                if (json != null) {
+                    try {
+                        val quote = Json.decodeFromString<Quote>(json)
+                        _uiState.update { it.copy(quoteOfTheDay = quote) }
+                        return@launch
+                    } catch (e: Exception) {
+                        // If decode fails, fetch new
+                    }
+                }
+            }
+            
+            // Fetch new if needed
+            try {
+                val newQuote = repository.getRandomQuote()
+                if (newQuote != null) {
+                    val json = Json.encodeToString(newQuote)
+                    prefs.edit()
+                        .putString("date", today)
+                        .putString("quote_json", json)
+                        .apply()
+                    _uiState.update { it.copy(quoteOfTheDay = newQuote) }
+                }
+            } catch (e: Exception) {
+                 // Ignore
+            }
+        }
     }
 
     fun fetchQuotes() {

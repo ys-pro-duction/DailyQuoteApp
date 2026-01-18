@@ -127,7 +127,7 @@ fun MainHomeContent(
                 verticalArrangement = Arrangement.spacedBy(24.dp)
             ) {
                 item {
-                    val qod = uiState.quotes.firstOrNull()
+                    val qod = uiState.quoteOfTheDay
                     QuoteOfTheDay(
                         quote = qod,
                         isLiked = qod != null && uiState.likedQuoteIds.contains(qod.id),

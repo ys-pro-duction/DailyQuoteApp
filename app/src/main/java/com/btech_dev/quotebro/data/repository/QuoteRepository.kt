@@ -140,4 +140,12 @@ class QuoteRepository {
             filter { eq("id", collectionId) }
         }
     }
+
+    suspend fun getRandomQuote(): Quote? = withContext(Dispatchers.IO) {
+        // Fetch a batch of recent quotes and pick one randomly
+        postgrest["quotes"].select {
+            order("created_at", io.github.jan.supabase.postgrest.query.Order.DESCENDING)
+            limit(50)
+        }.decodeList<Quote>().randomOrNull()
+    }
 }

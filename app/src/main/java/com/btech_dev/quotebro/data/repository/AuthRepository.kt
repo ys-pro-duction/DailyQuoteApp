@@ -52,4 +52,8 @@ class AuthRepository {
     suspend fun loadSessionFromStorage(): Boolean {
         return auth.loadFromStorage()
     }
+
+    fun getCurrentUserEmail(): String? {
+        return auth.currentUserOrNull()?.email
+    }
 }

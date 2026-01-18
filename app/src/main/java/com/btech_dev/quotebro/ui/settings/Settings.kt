@@ -19,6 +19,21 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.platform.LocalContext
+import android.app.TimePickerDialog
+import android.content.Context
+import android.Manifest
+import android.content.pm.PackageManager
+import androidx.core.content.ContextCompat
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.outlined.ExitToApp
+import androidx.compose.material.icons.outlined.Warning
+import com.btech_dev.quotebro.util.AlarmScheduler
+import java.util.Calendar
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.btech_dev.quotebro.ui.login.AuthViewModel
 import com.btech_dev.quotebro.ui.theme.ArrowTint
 import com.btech_dev.quotebro.ui.theme.AvatarBg
 import com.btech_dev.quotebro.ui.theme.BackgroundWhite
@@ -34,13 +49,19 @@ import com.btech_dev.quotebro.ui.theme.TextGray
 import com.btech_dev.quotebro.ui.theme.TextMediumSlate
 import com.btech_dev.quotebro.ui.theme.Transparent
 import com.btech_dev.quotebro.ui.theme.White
+import androidx.core.content.edit
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
     onBackClick: () -> Unit = {},
-    onLogOutClick: () -> Unit = {}
+    onLogOutClick: () -> Unit = {},
+    viewModel: AuthViewModel = viewModel()
 ) {
+    val authState by viewModel.uiState.collectAsState()
+    val name = authState.userProfile?.full_name ?: "User"
+    val email = authState.userEmail ?: "user@email.com"
+
     Scaffold(
         containerColor = BackgroundWhite
     ) { paddingValues ->
@@ -51,7 +72,7 @@ fun SettingsScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             contentPadding = PaddingValues(bottom = 32.dp)
         ) {
-            item { ProfileSection() }
+            item { ProfileSection(name, email) }
             
             item {
                 SettingsSectionTitle("APPEARANCE")
@@ -75,38 +96,103 @@ fun SettingsScreen(
             item {
                 SettingsSectionTitle("NOTIFICATIONS")
                 SettingsCard {
-                    SettingsActionItem(
-                        icon = Icons.Default.AddCircle,
+                    val context = LocalContext.current
+                    val prefs = remember { context.getSharedPreferences("settings", Context.MODE_PRIVATE) }
+                    
+                    var isEnabled by remember { 
+                        mutableStateOf(prefs.getBoolean("daily_quote_enabled", false)) 
+                    }
+                    var hour by remember { 
+                        mutableStateOf(prefs.getInt("daily_quote_hour", 8)) 
+                    }
+                    var minute by remember { 
+                        mutableStateOf(prefs.getInt("daily_quote_minute", 0)) 
+                    }
+
+                    val permissionLauncher = rememberLauncherForActivityResult(
+                        ActivityResultContracts.RequestPermission()
+                    ) { isGranted ->
+                        if (isGranted && isEnabled) {
+                             AlarmScheduler.scheduleDailyQuote(context, hour, minute)
+                        }
+                    }
+
+                    SettingsToggleItem(
+                        icon = Icons.Default.Notifications,
                         title = "Daily Quote",
-                        subtitle = "Set your reminder time",
-                        action = {
-                            Surface(
-                                color = PrimaryColor.copy(alpha = 0.1f),
-                                shape = RoundedCornerShape(50.dp),
-                                onClick = {}
-                            ) {
-                                Row(
-                                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Text("08:00 AM", color = PrimaryColor, style = MaterialTheme.typography.labelLarge)
-                                    Spacer(modifier = Modifier.width(4.dp))
-                                    Icon(Icons.Default.Edit, contentDescription = null, modifier = Modifier.size(14.dp), tint = PrimaryColor)
+                        subtitle = "Get a random quote every day",
+                        checked = isEnabled,
+                        onCheckedChange = { enabled ->
+                            isEnabled = enabled
+                            prefs.edit { putBoolean("daily_quote_enabled", enabled) }
+                            if (enabled) {
+                                if (android.os.Build.VERSION.SDK_INT >= 33) {
+                                    if (ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED) {
+                                        AlarmScheduler.scheduleDailyQuote(context, hour, minute)
+                                    } else {
+                                        permissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                                    }
+                                } else {
+                                    AlarmScheduler.scheduleDailyQuote(context, hour, minute)
                                 }
+                            } else {
+                                AlarmScheduler.cancelDailyQuote(context)
                             }
                         }
                     )
+                    
+                    if (isEnabled) {
+                        SettingsDivider()
+                        
+                        val timeString = String.format("%02d:%02d %s", 
+                            if (hour % 12 == 0) 12 else hour % 12, 
+                            minute, 
+                            if (hour < 12) "AM" else "PM"
+                        )
+                        
+                        SettingsActionItem(
+                            icon = Icons.Default.Notifications,
+                            title = "Reminder Time",
+                            subtitle = "Set your reminder time",
+                            action = {
+                                Surface(
+                                    color = PrimaryColor.copy(alpha = 0.1f),
+                                    shape = RoundedCornerShape(50.dp),
+                                    onClick = {
+                                        TimePickerDialog(
+                                            context,
+                                            { _, h, m ->
+                                                hour = h
+                                                minute = m
+                                                prefs.edit().putInt("daily_quote_hour", h)
+                                                        .putInt("daily_quote_minute", m).apply()
+                                                AlarmScheduler.scheduleDailyQuote(context, h, m)
+                                            },
+                                            hour,
+                                            minute,
+                                            false
+                                        ).show()
+                                    }
+                                ) {
+                                    Row(
+                                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Text(timeString, color = PrimaryColor, style = MaterialTheme.typography.labelLarge)
+                                        Spacer(modifier = Modifier.width(4.dp))
+                                        Icon(Icons.Default.Edit, contentDescription = null, modifier = Modifier.size(14.dp), tint = PrimaryColor)
+                                    }
+                                }
+                            }
+                        )
+                    }
                 }
             }
 
             item {
                 SettingsSectionTitle("ACCOUNT")
                 SettingsCard {
-                    SettingsNavigationItem(icon = Icons.Default.Person, title = "Edit Profile")
-                    SettingsDivider()
-                    SettingsNavigationItem(icon = Icons.Default.Lock, title = "Change Password")
-                    SettingsDivider()
-                    SettingsNavigationItem(icon = Icons.Default.Add, title = "Privacy Policy")
+                    SettingsNavigationItem(icon = Icons.Outlined.Warning, title = "Privacy Policy")
                 }
             }
 
@@ -144,7 +230,7 @@ fun SettingsScreen(
 }
 
 @Composable
-fun ProfileSection() {
+fun ProfileSection(name: String, email: String) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier.padding(vertical = 24.dp)
@@ -164,26 +250,11 @@ fun ProfileSection() {
                     tint = DarkGray
                 )
             }
-            Surface(
-                modifier = Modifier
-                    .size(32.dp)
-                    .align(Alignment.BottomEnd)
-                    .offset(x = (-4).dp, y = (-4).dp),
-                shape = CircleShape,
-                color = PrimaryColor,
-                border = BorderStroke(2.dp, White)
-            ) {
-                Icon(
-                    Icons.Default.Edit,
-                    contentDescription = "Edit Profile",
-                    modifier = Modifier.padding(6.dp),
-                    tint = White
-                )
-            }
         }
         Spacer(modifier = Modifier.height(16.dp))
-        Text("Alex Sterling", style = MaterialTheme.typography.headlineMedium)
-        Text("@alex_quotes", color = TextGray, style = MaterialTheme.typography.bodyMedium)
+        Text(name, style = MaterialTheme.typography.headlineMedium)
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(email, color = TextGray, style = MaterialTheme.typography.bodyMedium)
     }
 }
 
@@ -328,7 +399,7 @@ fun SettingsActionItem(icon: ImageVector, title: String, subtitle: String, actio
 fun SettingsNavigationItem(icon: ImageVector, title: String) {
     SettingsItemBase(icon, title) {
         Icon(
-            Icons.AutoMirrored.Filled.ArrowBack,
+            Icons.AutoMirrored.Filled.KeyboardArrowRight,
             contentDescription = null,
             modifier = Modifier.size(16.dp),
             tint = ArrowTint
