@@ -25,6 +25,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Person
@@ -236,6 +237,55 @@ fun SettingsScreen(
                             }
                         )
                     }
+                }
+            }
+
+            item {
+                SettingsSectionTitle("WIDGET")
+                SettingsCard {
+                    val context = LocalContext.current
+
+                    SettingsActionItem(
+                        icon = Icons.Default.Add,
+                        title = "Add Widget",
+                        subtitle = "Add Quote of the Day to home screen",
+                        action = {
+                            Button(
+                                onClick = {
+                                    val appWidgetManager =
+                                        android.appwidget.AppWidgetManager.getInstance(context)
+                                    val myProvider = android.content.ComponentName(
+                                        context,
+                                        com.btech_dev.quotebro.widget.QuoteWidgetProvider::class.java
+                                    )
+
+                                    if (appWidgetManager.isRequestPinAppWidgetSupported) {
+                                        appWidgetManager.requestPinAppWidget(
+                                            myProvider,
+                                            null,
+                                            null
+                                        )
+                                    } else {
+                                        // Show toast or dialog
+                                        android.widget.Toast.makeText(
+                                            context,
+                                            "Long-press home screen > Widgets > Quote Bro",
+                                            android.widget.Toast.LENGTH_LONG
+                                        ).show()
+                                    }
+                                },
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = PrimaryColor
+                                ),
+                                shape = RoundedCornerShape(12.dp)
+                            ) {
+                                Text(
+                                    "Add",
+                                    color = MaterialTheme.colorScheme.onPrimary
+                                )
+                            }
+                        }
+                    )
                 }
             }
 

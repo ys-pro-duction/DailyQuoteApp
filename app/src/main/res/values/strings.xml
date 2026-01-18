@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">Quote Bro</string>
+    <string name="widget_description">Display Quote of the Day on your home screen</string>
 </resources>

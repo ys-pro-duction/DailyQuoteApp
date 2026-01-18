@@ -77,6 +77,15 @@ class HomeViewModel(
                         .putString("quote_json", json)
                         .apply()
                     _uiState.update { it.copy(quoteOfTheDay = newQuote) }
+                    
+                    // Update widget
+                    try {
+                        com.btech_dev.quotebro.widget.QuoteWidgetProvider.updateAllWidgets(
+                            getApplication()
+                        )
+                    } catch (e: Exception) {
+                        // Widget not added or error updating
+                    }
                 }
             } catch (e: Exception) {
                 // Ignore
