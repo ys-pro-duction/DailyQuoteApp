@@ -1,6 +1,7 @@
 package com.btech_dev.quotebro.data.remote
 
 import android.content.Context
+import com.btech_dev.quotebro.BuildConfig
 import io.github.jan.supabase.auth.Auth
 import io.github.jan.supabase.createSupabaseClient
 import io.github.jan.supabase.postgrest.Postgrest
@@ -9,18 +10,16 @@ import io.github.jan.supabase.storage.Storage
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import io.github.jan.supabase.SupabaseClient as SupabaseKtClient
+import androidx.core.content.edit
 
 object SupabaseClient {
-    private const val SUPABASE_URL = "https://wpuooqjxztilnkoprili.supabase.co"
-    private const val SUPABASE_ANON_KEY = "sb_publishable_n54SavNkym0Z_KY_tl_A3A_DnCrdmfQ"
-
     private var _client: SupabaseKtClient? = null
 
     fun initialize(context: Context) {
         if (_client == null) {
             _client = createSupabaseClient(
-                supabaseUrl = SUPABASE_URL,
-                supabaseKey = SUPABASE_ANON_KEY
+                supabaseUrl = BuildConfig.SUPABASE_URL,
+                supabaseKey = BuildConfig.SUPABASE_KEY
             ) {
                 install(Auth) {
                     sessionManager = object : io.github.jan.supabase.auth.SessionManager {
@@ -28,7 +27,7 @@ object SupabaseClient {
                             context.getSharedPreferences("supabase_session", Context.MODE_PRIVATE)
 
                         override suspend fun saveSession(session: io.github.jan.supabase.auth.user.UserSession) {
-                            prefs.edit().putString("session", Json.encodeToString(session)).apply()
+                            prefs.edit { putString("session", Json.encodeToString(session)) }
                         }
 
                         override suspend fun loadSession(): io.github.jan.supabase.auth.user.UserSession? {
@@ -41,7 +40,7 @@ object SupabaseClient {
                         }
 
                         override suspend fun deleteSession() {
-                            prefs.edit().remove("session").apply()
+                            prefs.edit { remove("session") }
                         }
                     }
                 }

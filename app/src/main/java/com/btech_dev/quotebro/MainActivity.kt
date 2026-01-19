@@ -108,7 +108,7 @@ fun MainScreen(
     // Handle deep link for password reset
     LaunchedEffect(Unit) {
         activity?.intent?.data?.let { uri ->
-            if (uri.scheme == "http" && uri.host == "reset-callback.quotebro") {
+            if (uri.scheme == "http" && uri.host == "reset-callback.quotebro" && uri.fragment?.contains("recovery") == true) {
                 navController.navigate(Screen.UpdatePassword(uri.toString()))
             }
         }
