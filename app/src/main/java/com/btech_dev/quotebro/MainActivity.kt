@@ -1,6 +1,8 @@
 package com.btech_dev.quotebro
 
+import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
@@ -24,6 +26,7 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -32,14 +35,15 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.btech_dev.quotebro.data.remote.SupabaseClient
 import com.btech_dev.quotebro.ui.home.TopBar
-import com.btech_dev.quotebro.ui.login.AuthScreen
 import com.btech_dev.quotebro.ui.login.AuthViewModel
 import com.btech_dev.quotebro.ui.navigation.AppNavGraph
 import com.btech_dev.quotebro.ui.navigation.Screen
@@ -47,6 +51,10 @@ import com.btech_dev.quotebro.ui.settings.SettingsViewModel
 import com.btech_dev.quotebro.ui.theme.PrimaryColor
 import com.btech_dev.quotebro.ui.theme.QuoteBroTheme
 import com.btech_dev.quotebro.ui.theme.TextGray
+import io.github.jan.supabase.annotations.SupabaseInternal
+import io.github.jan.supabase.auth.auth
+import io.github.jan.supabase.auth.handleDeeplinks
+import io.github.jan.supabase.auth.parseFragmentAndImportSession
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -64,7 +72,10 @@ class MainActivity : ComponentActivity() {
                     )
             )
 
-            QuoteBroTheme(darkTheme = settingsState.isDarkMode, fontScale = settingsState.fontSize) {
+            QuoteBroTheme(
+                darkTheme = settingsState.isDarkMode,
+                fontScale = settingsState.fontSize
+            ) {
                 MainScreen(settingsViewModel = settingsViewModel)
             }
         }
@@ -91,29 +102,43 @@ fun MainScreen(
         BottomNavItem(Screen.Settings, Icons.Default.Person, "Me")
     )
 
+    val context = LocalContext.current
+    val activity = context as? ComponentActivity
+
+    // Handle deep link for password reset
+    LaunchedEffect(Unit) {
+        activity?.intent?.data?.let { uri ->
+            if (uri.scheme == "http" && uri.host == "reset-callback.quotebro") {
+                navController.navigate(Screen.UpdatePassword(uri.toString()))
+            }
+        }
+    }
+
     Box(modifier = Modifier.fillMaxSize()) {
         if (authState.isCheckingAuth) {
             CircularProgressIndicator(
                 modifier = Modifier.align(Alignment.Center)
             )
-        } else if (authState.isAuthenticated) {
+        } else {
             val navBackStackEntry by navController.currentBackStackEntryAsState()
             val currentDestination = navBackStackEntry?.destination
 
             // Check if we're on a main screen (show bottom bar) or a detail screen (hide bottom bar)
             val showBottomBar =
-                bottomNavItems.any { currentDestination?.hasRoute(it.route::class) == true }
+                    bottomNavItems.any { currentDestination?.hasRoute(it.route::class) == true }
             // Show top bar only on Home screen
-            val showTopBar = currentDestination?.hasRoute(Screen.Home::class) == true
+            val showTopBar =
+                currentDestination?.hasRoute(Screen.Home::class) == true
 
             Box(modifier = Modifier.fillMaxSize()) {
                 // Main content
                 AppNavGraph(
                     navController = navController,
-                    startDestination = Screen.Home,
+                    startDestination = if (authState.isAuthenticated) Screen.Home else Screen.Auth,
                     onLogOut = { authViewModel.signOut() },
                     modifier = Modifier.fillMaxSize(),
-                    settingsViewModel = settingsViewModel
+                    settingsViewModel = settingsViewModel,
+                    authViewModel = authViewModel
                 )
 
                 // Animated Top Bar - only on Home screen
@@ -178,11 +203,6 @@ fun MainScreen(
                     }
                 }
             }
-        } else {
-            AuthScreen(
-                viewModel = authViewModel,
-                onAuthSuccess = { navController.navigate(Screen.Home) }
-            )
         }
     }
 }

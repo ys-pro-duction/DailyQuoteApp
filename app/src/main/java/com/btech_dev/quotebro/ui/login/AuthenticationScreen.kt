@@ -43,7 +43,8 @@ import com.btech_dev.quotebro.ui.theme.icons.Quote
 fun AuthScreen(
     modifier: Modifier = Modifier,
     viewModel: AuthViewModel = viewModel(),
-    onAuthSuccess: () -> Unit = {}
+    onAuthSuccess: () -> Unit = {},
+    onForgotPasswordClick: () -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
@@ -126,7 +127,7 @@ fun AuthScreen(
                     ) {
                         if (showLogin.value) LoginBottomSheet(
                             onLoginClick = { email, password -> viewModel.signIn(email, password) },
-                            onForgotPasswordClick = {},
+                            onForgotPasswordClick = onForgotPasswordClick,
                             showSignUp = { showLogin.value = false })
                         else SignUpBottomSheet(
                             onSignUpClick = { email, password, name ->

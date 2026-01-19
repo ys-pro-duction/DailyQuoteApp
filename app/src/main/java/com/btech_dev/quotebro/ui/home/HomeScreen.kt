@@ -139,7 +139,7 @@ fun MainHomeContent(
                 }
                 item {
                     CategoriesSection(
-                        selectedCategory = uiState.selectedCategory ?: "For You",
+                        selectedCategory = uiState.selectedCategory ?: "All",
                         onCategorySelected = { viewModel.selectCategory(it) }
                     )
                 }
@@ -326,7 +326,7 @@ fun CategoriesSection(
     selectedCategory: String,
     onCategorySelected: (String) -> Unit
 ) {
-    val categories = listOf("For You", "Motivation", "Love", "Wisdom", "Life", "Philosophy")
+    val categories = listOf("All", "Motivation", "Love", "Success", "Wisdom", "Humor")
 
     LazyRow(
         horizontalArrangement = Arrangement.spacedBy(12.dp)

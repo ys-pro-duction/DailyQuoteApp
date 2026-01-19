@@ -24,6 +24,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -40,9 +41,11 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.btech_dev.quotebro.ui.theme.PrimaryColor
+import com.btech_dev.quotebro.ui.theme.QuoteBroTheme
 import com.btech_dev.quotebro.ui.theme.TextGray
 import com.btech_dev.quotebro.ui.theme.icons.FeatherEyeOff
 import com.btech_dev.quotebro.ui.theme.icons.FeatherEyeOn
@@ -149,6 +152,17 @@ fun LoginBottomSheet(
             singleLine = true,
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
         )
+        Spacer(modifier = Modifier.height(16.dp))
+        Button(
+            {onForgotPasswordClick()},
+            colors = ButtonDefaults.buttonColors(
+                containerColor = Color.Transparent,
+                contentColor = MaterialTheme.colorScheme.primary
+            ),
+            modifier = Modifier.align(Alignment.End)
+        ) {
+            Text("Forgot Password?")
+        }
         Spacer(modifier = Modifier.height(24.dp))
 
         // --- Sign In Button ---
@@ -205,7 +219,19 @@ fun LoginBottomSheet(
                 modifier = Modifier.padding(16.dp)
             )
         }
+    }
+}
 
-
+@Preview(showBackground = true, showSystemUi = true)
+@Composable
+fun LoginBottomSheetPreview() {
+    QuoteBroTheme {
+        Surface {
+            LoginBottomSheet(
+                onLoginClick = { _, _ -> },
+                onForgotPasswordClick = {},
+                showSignUp = {}
+            )
+        }
     }
 }

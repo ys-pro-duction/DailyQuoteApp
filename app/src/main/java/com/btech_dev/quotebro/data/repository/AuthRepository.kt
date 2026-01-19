@@ -56,4 +56,16 @@ class AuthRepository {
     fun getCurrentUserEmail(): String? {
         return auth.currentUserOrNull()?.email
     }
+
+    suspend fun resetPasswordForEmail(email: String, redirectUrl: String) =
+        withContext(Dispatchers.IO) {
+            auth.resetPasswordForEmail(email, redirectUrl)
+        }
+
+    suspend fun updatePassword(redirectUrl: String, newPassword: String) =
+        withContext(Dispatchers.IO) {
+            auth.updateUser(redirectUrl = redirectUrl) {
+                password = newPassword
+            }
+        }
 }

@@ -98,7 +98,7 @@ class HomeViewModel(
             _uiState.update { it.copy(isLoading = true, error = null) }
             try {
                 val category = _uiState.value.selectedCategory
-                val quotes = if (category == null || category == "For You") {
+                val quotes = if (category == null || category == "All") {
                     repository.getQuotes()
                 } else {
                     repository.getQuotesByCategory(category)

@@ -22,4 +22,10 @@ sealed class Screen {
 
     @Serializable
     data class ShareQuote(val quoteText: String, val quoteAuthor: String) : Screen()
+    
+    @Serializable
+    data object ForgotPassword : Screen()
+    
+    @Serializable
+    data class UpdatePassword(val redirectUrl: String) : Screen()
 }
