@@ -12,7 +12,7 @@ A full-featured quote discovery and collection mobile application built with Kot
 
 Design mockups created using [Stitch - AI Design Tool](https://stitch.withgoogle.com)
 
-[Potential Design Files Placeholder - Link to your Figma/Stitch designs]
+Stitch design [link](https://stitch.withgoogle.com/projects/14224876403977163379)
 
 ## ✨ Features Implemented
 
@@ -292,26 +292,36 @@ See `gradle/libs.versions.toml` for complete dependency list.
 
 ## 📱 Screenshots
 
-### Home Screen
-> [Screenshot placeholder - Home screen with Quote of the Day and feed]
+### Login/Signup 
+ <p>
+  <img src="screenshots/Screenshot_20260122_120432.png" width="200px" />
+  <img src="screenshots/Screenshot_20260122_120458.png" width="200px" />
+  <img src="screenshots/Screenshot_20260122_120511.png" width="200px" />
+</p>
 
-### Categories
-> [Screenshot placeholder - Category chips and filtered quotes]
-
-### Favorites
-> [Screenshot placeholder - Saved quotes list]
-
-### Collections
-> [Screenshot placeholder - Collections management]
+### Quote List / Favorites / Categories
+<p>
+  <img src="screenshots/Screenshot_20260122_120536.png" width="200px" />
+  <img src="screenshots/Screenshot_20260122_120553.png" width="200px" />
+  <img src="screenshots/Screenshot_20260122_120626.png" width="200px" />
+  <img src="screenshots/Screenshot_20260122_120633.png" width="200px" />
+  <img src="screenshots/Screenshot_20260122_120641.png" width="200px" />
+</p>
 
 ### Quote Sharing
-> [Screenshot placeholder - Share card styles and export options]
+<p>
+  <img src="screenshots/Screenshot_20260122_120616.png" width="200px" />
+</p>
 
 ### Settings
-> [Screenshot placeholder - Theme, font size, and notification settings]
+<p>
+  <img src="screenshots/Screenshot_20260122_120648.png" width="200px" />
+  <img src="screenshots/Screenshot_20260122_120700.png" width="200px" />
+</p>
 
 ### Widget
-> [Screenshot placeholder - Home screen widget]
+  <img src="screenshots/Screenshot_20260122_120727.png" width="200px" />
+
 
 ## 🤖 AI Coding Approach & Workflow
 

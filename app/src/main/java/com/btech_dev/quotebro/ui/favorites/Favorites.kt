@@ -231,7 +231,7 @@ fun FavoritesScreen(
                 shape = CircleShape,
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
-                    .padding(end = 24.dp, bottom = 90.dp)
+                    .padding(end = 24.dp, bottom = 120.dp)
                     .size(64.dp)
             ) {
                 Icon(

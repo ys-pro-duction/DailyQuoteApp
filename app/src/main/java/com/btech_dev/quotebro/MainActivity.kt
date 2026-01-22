@@ -1,8 +1,6 @@
 package com.btech_dev.quotebro
 
-import android.content.Intent
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
@@ -14,6 +12,7 @@ import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Home
@@ -42,7 +41,6 @@ import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import com.btech_dev.quotebro.data.remote.SupabaseClient
 import com.btech_dev.quotebro.ui.home.TopBar
 import com.btech_dev.quotebro.ui.login.AuthViewModel
 import com.btech_dev.quotebro.ui.navigation.AppNavGraph
@@ -51,10 +49,6 @@ import com.btech_dev.quotebro.ui.settings.SettingsViewModel
 import com.btech_dev.quotebro.ui.theme.PrimaryColor
 import com.btech_dev.quotebro.ui.theme.QuoteBroTheme
 import com.btech_dev.quotebro.ui.theme.TextGray
-import io.github.jan.supabase.annotations.SupabaseInternal
-import io.github.jan.supabase.auth.auth
-import io.github.jan.supabase.auth.handleDeeplinks
-import io.github.jan.supabase.auth.parseFragmentAndImportSession
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -63,19 +57,19 @@ class MainActivity : ComponentActivity() {
         setContent {
             val settingsViewModel: SettingsViewModel = viewModel()
             val settingsState by settingsViewModel.uiState.collectAsState()
-            enableEdgeToEdge(
-                statusBarStyle =
-                    if (settingsState.isDarkMode) SystemBarStyle.dark(Color.Transparent.toArgb())
-                    else SystemBarStyle.light(
-                        Color.Transparent.toArgb(),
-                        Color.Transparent.toArgb()
-                    )
-            )
 
             QuoteBroTheme(
                 darkTheme = settingsState.isDarkMode,
                 fontScale = settingsState.fontSize
             ) {
+                enableEdgeToEdge(
+                    statusBarStyle =
+                        if (settingsState.isDarkMode) SystemBarStyle.dark(Color.Transparent.toArgb())
+                        else SystemBarStyle.light(
+                            Color.Transparent.toArgb(),
+                            Color.Transparent.toArgb()
+                        )
+                )
                 MainScreen(settingsViewModel = settingsViewModel)
             }
         }
@@ -108,7 +102,10 @@ fun MainScreen(
     // Handle deep link for password reset
     LaunchedEffect(Unit) {
         activity?.intent?.data?.let { uri ->
-            if (uri.scheme == "http" && uri.host == "reset-callback.quotebro" && uri.fragment?.contains("recovery") == true) {
+            if (uri.scheme == "http" && uri.host == "reset-callback.quotebro" && uri.fragment?.contains(
+                    "recovery"
+                ) == true
+            ) {
                 navController.navigate(Screen.UpdatePassword(uri.toString()))
             }
         }
@@ -125,7 +122,7 @@ fun MainScreen(
 
             // Check if we're on a main screen (show bottom bar) or a detail screen (hide bottom bar)
             val showBottomBar =
-                    bottomNavItems.any { currentDestination?.hasRoute(it.route::class) == true }
+                bottomNavItems.any { currentDestination?.hasRoute(it.route::class) == true }
             // Show top bar only on Home screen
             val showTopBar =
                 currentDestination?.hasRoute(Screen.Home::class) == true
@@ -172,7 +169,6 @@ fun MainScreen(
                 ) {
                     NavigationBar(
                         modifier = Modifier
-                            .navigationBarsPadding()
                             .shadow(4.dp),
                         containerColor = MaterialTheme.colorScheme.surface,
                     ) {
